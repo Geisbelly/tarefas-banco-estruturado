@@ -29,7 +29,7 @@ export const cadastrarUsuario = async (req, res) => {
   }
 };
 
-export const login = async (req, res) => {
+export const loginin = async (req, res) => {
   try {
     const { email, senha } = req.body;
     const usuario = await login(email, senha);
