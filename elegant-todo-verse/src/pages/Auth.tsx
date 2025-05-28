@@ -66,6 +66,8 @@ const Auth = () => {
         title: "Registro realizado!",
         description: "Sua conta foi criada com sucesso.",
       });
+
+      navigate('/dashboard')
     }).catch(err => {
       console.error("Erro ao criar usuario:", err);
     }).finally(()=>{setIsLoading(false); clear()});
