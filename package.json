@@ -1,6 +1,6 @@
 {
-  "name": "elegant-todo-verse",
-  "version": "1.0.0",
+  "name": "projeto-todo",
+  "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix elegant-todo-verse\" \"npm run dev --prefix backend\""
   },
