@@ -10,7 +10,7 @@ import {
 
 export const listarUsuarios = async (req, res) => {
   try {
-    const usuarios = await buscarTodosUsuarios();
+    const usuarios = await buscarTodosEmails();
     res.json(usuarios);
   } catch (error) {
     console.error('Erro ao listar usuários:', error);
@@ -18,7 +18,7 @@ export const listarUsuarios = async (req, res) => {
   }
 };
 
-export const criarUsuario = async (req, res) => {
+export const cadastrarUsuario = async (req, res) => {
   try {
     const body = req.body;
     const novoUsuario = await criarUsuario(body.nome, body.email, body.senha);

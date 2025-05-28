@@ -38,6 +38,27 @@ const postTask = async (newTask:Task) => {
         console.error("Erro ao buscar tarefas:", err);
       }
 };
+const postUser = async (datas:{email:string, senha: string, nome: string}) => {
+      try {
+        const res = await fetch("/api/cadastre", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(datas)
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Erro ${res.status}: ${text}`);
+        }
+        const data = await res.json();
+
+        console.log("Dados recebidos:", data);
+        return data;
+      } catch (err) {
+        console.error("Erro ao buscar tarefas:", err);
+      }
+};
 
 const atualizarTarefa = async (id, dadosAtualizados) => {
   try {
@@ -78,4 +99,4 @@ const deletarTarefa = async (id) => {
   }
 };
 
-export  {postTask, getTask, atualizarTarefa, deletarTarefa};
+export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser};

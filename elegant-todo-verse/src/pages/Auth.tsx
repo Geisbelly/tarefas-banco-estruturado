@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
+import { postUser } from "@/services/tarefas";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -47,6 +48,18 @@ const Auth = () => {
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    postUser({email:registerEmail, senha:registerPassword, nome:registerName}).then((e) => {
+      const novoUser = {email:registerEmail,senha:registerPassword,nome:registerName}
+      console.log("Usuario criada com sucesso:", novoUser);
+
+       toast({
+      title: "Usuario criada!",
+      description: `"${novoUser.nome}" foi adicionada com sucesso.`,
+    });
+    }).catch(err => {
+      console.error("Erro ao criar usuario:", err);
+    });
     
     // Simulando registro
     setTimeout(() => {
