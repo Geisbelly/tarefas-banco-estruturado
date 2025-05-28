@@ -2,7 +2,7 @@
   "name": "projeto-todo",
   "private": true,
   "scripts": {
-    "dev": "npm run dev \"npm run dev --prefix elegant-todo-verse\" \"npm run dev --prefix backend\""
+    "dev": "npx concurrently \"npm run dev --prefix elegant-todo-verse\" \"npm run dev --prefix backend\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
