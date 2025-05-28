@@ -45,6 +45,15 @@ const Auth = () => {
     }, 1500);
   };
 
+  const clear = ()=>{
+    setLoginEmail("")
+    setLoginPassword("")
+    setLoginPassword("")
+    setRegisterEmail("")
+    setRegisterName("")
+    setRegisterPassword("")
+  }
+
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -59,7 +68,7 @@ const Auth = () => {
       });
     }).catch(err => {
       console.error("Erro ao criar usuario:", err);
-    }).finally(()=>{setIsLoading(true);});
+    }).finally(()=>{setIsLoading(false); clear()});
     
     
   };
