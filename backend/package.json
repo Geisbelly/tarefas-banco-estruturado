@@ -5,6 +5,7 @@
     "dev": "nodemon src/index.js"
   },
   "dependencies": {
+    "concurrently": "^9.1.2",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
