@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/Dialog";
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { getTask,postTask, atualizarTarefa, deletarTarefa } from "../services/tarefas";
 
@@ -68,7 +68,8 @@ const TaskList = () => {
     const newTask: Task = {
       ...taskData,
       dataCriacao: new Date(),
-      comentarios: []
+      comentarios: [],
+      _id: ""
     };
      postTask(newTask).then((e) => {
       const novaTarefa = {_id: e, ...newTask}
