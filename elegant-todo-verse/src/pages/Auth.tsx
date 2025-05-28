@@ -53,26 +53,15 @@ const Auth = () => {
       const novoUser = {email:registerEmail,senha:registerPassword,nome:registerName}
       console.log("Usuario criada com sucesso:", novoUser);
 
-       toast({
-      title: "Usuario criada!",
-      description: `"${novoUser.nome}" foi adicionada com sucesso.`,
-    });
-    }).catch(err => {
-      console.error("Erro ao criar usuario:", err);
-    });
-    
-    // Simulando registro
-    setTimeout(() => {
-      setIsLoading(false);
-      localStorage.setItem('isLoggedIn', 'true');
-      
       toast({
         title: "Registro realizado!",
         description: "Sua conta foi criada com sucesso.",
       });
-      
-      navigate('/dashboard');
-    }, 1500);
+    }).catch(err => {
+      console.error("Erro ao criar usuario:", err);
+    }).finally(()=>{setIsLoading(true);});
+    
+    
   };
 
   const toggleShowPassword = () => {
