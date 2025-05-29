@@ -12,6 +12,7 @@ export interface Task {
   descricao: string;
   dataCriacao: Date;
   dataConclusao?: Date; // Optional, as it may not be set until the task is completed
+
   status: "pendente" | "em andamento" | "concluida";
   criador: string;
   colaboradores: string[];

@@ -64,7 +64,6 @@ export async function criarTarefa(
       status: (status) || "pendente",
       criador,
       colaboradores,
-      dataConclusao: null, // Inicialmente nulo
       tags,
       comentarios: []
     };

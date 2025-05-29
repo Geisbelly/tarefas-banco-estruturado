@@ -38,6 +38,7 @@ export async function criarTarefa(
   criador,
   colaboradores = [],
   status,
+  data
   tags = []
 ) {
   let tarefasCollection;
@@ -64,7 +65,6 @@ export async function criarTarefa(
       status: (status) || "pendente",
       criador,
       colaboradores,
-      dataConclusao: null, // Inicialmente nulo
       tags,
       comentarios: []
     };

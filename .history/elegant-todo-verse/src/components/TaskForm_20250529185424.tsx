@@ -69,7 +69,7 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask, criador }: Tas
           tags,
           dataCriacao: task.dataCriacao,
           comentarios: task.comentarios || [],
-          dataConclusao: (status === "concluida" && status !== statusAntes) ? new Date() : null
+          dataConclusao: (status === "concluida" && status !== st) ? new Date() : null
         });
       }
       resetForm();
@@ -83,8 +83,7 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask, criador }: Tas
         criador,
         colaboradores,
         status,
-        tags,
-        dataConclusao: status === "concluida" ? new Date() : null
+        tags
       });
       resetForm();
       return;
@@ -97,22 +96,7 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask, criador }: Tas
         criador,
         colaboradores,
         status,
-        tags,
-        dataConclusao: status === "concluida" ? new Date() : null
-      });
-      resetForm();
-      return;
-    }
-    e.preventDefault();
-    if (titulo.trim()) {
-      onCreateTask({
-        titulo: titulo.trim(),
-        descricao: descricao.trim(),
-        criador,
-        colaboradores,
-        status,
-        tags,
-        dataConclusao: status === "concluida" ? new Date() : null
+        tags
       });
       resetForm();
       return;

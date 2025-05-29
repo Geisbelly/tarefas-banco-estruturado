@@ -103,20 +103,6 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask, criador }: Tas
       resetForm();
       return;
     }
-    e.preventDefault();
-    if (titulo.trim()) {
-      onCreateTask({
-        titulo: titulo.trim(),
-        descricao: descricao.trim(),
-        criador,
-        colaboradores,
-        status,
-        tags,
-        dataConclusao: status === "concluida" ? new Date() : null
-      });
-      resetForm();
-      return;
-    }
     setStatus("pendente");
     setTags([]);
     setNewTag("");

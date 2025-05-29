@@ -22,7 +22,7 @@ const collectionName = 'tarefas';
  * @property {string} titulo
  * @property {string} descricao
  * @property {Date} dataCriacao
- * @property {Date} dataConclusao
+ * @property {Date} dataCriacao
  * @property {'pendente' | 'em andamento' | 'concluida'} status
  * @property {string[]} tags
  * @property {string[]} colaboradores
@@ -64,7 +64,6 @@ export async function criarTarefa(
       status: (status) || "pendente",
       criador,
       colaboradores,
-      dataConclusao: null, // Inicialmente nulo
       tags,
       comentarios: []
     };

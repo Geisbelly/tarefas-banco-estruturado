@@ -18,7 +18,7 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask, criador }: Tas
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [status, setStatus] = useState<Task['status']>("pendente");
-  const [statusAntes, setStatusAntes] = useState<Task['status']>("pendente");
+  
   const [colaboradores, setColaboradores] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
@@ -46,7 +46,6 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask, criador }: Tas
 , []);
 
   const handleSubmit = (e: React.FormEvent) => {
-
     if (task) {
       e.preventDefault();
       console.log("Atualizando tarefa:", task._id);
@@ -58,20 +57,18 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask, criador }: Tas
         colaboradores,
         tags
       });
-      if (status !== statusAntes) {
-        onUpdateTask(task._id, {
-          _id: task._id,
-          titulo: titulo.trim(),
-          descricao: descricao.trim(),
-          status,
-          criador: criador || task.criador,
-          colaboradores,
-          tags,
-          dataCriacao: task.dataCriacao,
-          comentarios: task.comentarios || [],
-          dataConclusao: (status === "concluida" && status !== statusAntes) ? new Date() : null
-        });
-      }
+      
+      onUpdateTask(task._id, {
+        _id: task._id,
+        titulo: titulo.trim(),
+        descricao: descricao.trim(),
+        status,
+        criador: criador || task.criador,
+        colaboradores,
+        tags,
+        dataCriacao: task.dataCriacao,
+        comentarios: task.comentarios || []
+      });
       resetForm();
       return;
     }
@@ -83,8 +80,7 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask, criador }: Tas
         criador,
         colaboradores,
         status,
-        tags,
-        dataConclusao: status === "concluida" ? new Date() : null
+        tags
       });
       resetForm();
       return;
@@ -97,22 +93,7 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask, criador }: Tas
         criador,
         colaboradores,
         status,
-        tags,
-        dataConclusao: status === "concluida" ? new Date() : null
-      });
-      resetForm();
-      return;
-    }
-    e.preventDefault();
-    if (titulo.trim()) {
-      onCreateTask({
-        titulo: titulo.trim(),
-        descricao: descricao.trim(),
-        criador,
-        colaboradores,
-        status,
-        tags,
-        dataConclusao: status === "concluida" ? new Date() : null
+        tags
       });
       resetForm();
       return;
