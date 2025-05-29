@@ -41,14 +41,7 @@ export async function criarTarefa(
 ) {
   let tarefasCollection;
   
-  console.log("Criando tarefa com os seguintes dados:", {
-    titulo,
-    descricao,
-    criador,
-    colaboradores,
-    status,
-    tags
-  });
+  console.log("Criando tarefa com os seguintes dados:", {);
   if (status && !statusPermitidos.includes(status)) {
     console.error(`Status inválido: "${status}". Status permitidos são: ${statusPermitidos.join(', ')}`);
     return null;

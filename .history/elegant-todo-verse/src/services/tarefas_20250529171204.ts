@@ -4,13 +4,12 @@ import {Task, Comment} from '../types/task';
 
 const getTask = async (usuario:string) => {
       try {
-        console.log("Buscando tarefas para o usuário:", usuario);
         const res = await fetch("api/tarefas/u", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ usuario: usuario })
+          body: JSON.stringify({ usuario })
         });
         if (!res.ok) {
           const text = await res.text();
@@ -56,12 +55,12 @@ const postTask = async (newTask:Task) => {
           },
           body: JSON.stringify(newTask)
         });
-        console.log("Res:", res);
         if (!res.ok) {
           const text = await res.text();
           throw new Error(`Erro ${res.status}: ${text}`);
         }
         const data = await res.json();
+        
 
         console.log("Dados recebidos:", data);
         return data;

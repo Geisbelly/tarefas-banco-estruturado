@@ -17,8 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { getTask,postTask, atualizarTarefa, deletarTarefa, postTaskCommentario, deleteTaskCommentario } from "../../services/tarefas";
-import { log } from "console";
-import { set } from "date-fns";
+
 
 const TaskList = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -67,15 +66,12 @@ const TaskList = () => {
 
 
   const createTask = (taskData: Omit<Task, '_id' | 'dataCriacao' | 'comentarios'>) => {
-     const user = JSON.parse(localStorage.getItem('user'));
      
-    
     const newTask: Task = {
       ...taskData,
       dataCriacao: new Date(),
       comentarios: [],
       _id: "",
-
     };
 
     console.log("Criando nova tarefa:", newTask);

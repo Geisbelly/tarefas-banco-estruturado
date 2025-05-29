@@ -29,8 +29,8 @@ const Navigation = () => {
       
       // Redirecionar para login se não estiver autenticado e tentar acessar páginas protegidas
       if (!fakeAuthStatus && 
-         (location.pathname === '/dashboard' || 
-          location.pathname === '/tasks')) {
+         (location.pathname === '/u/dashboard' || 
+          location.pathname === '/u/tasks')) {
         navigate('/auth');
       }
     };
@@ -108,9 +108,9 @@ const Navigation = () => {
               {isLoggedIn && (
                 <>
                   <NavigationMenuItem>
-                    <Link to="/dashboard" className={cn(
+                    <Link to="/u/dashboard" className={cn(
                       navigationMenuTriggerStyle(),
-                      location.pathname === "/dashboard" ? "bg-gray-700 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-100"
+                      location.pathname === "/u/dashboard" ? "bg-gray-700 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-100"
                     )}>
                       <BarChart className="mr-2 h-4 w-4" />
                       Dashboard
@@ -118,9 +118,9 @@ const Navigation = () => {
                   </NavigationMenuItem>
 
                   <NavigationMenuItem>
-                    <Link to="/tasks" className={cn(
+                    <Link to="/u/tasks" className={cn(
                       navigationMenuTriggerStyle(),
-                      location.pathname === "/tasks" ? "bg-gray-700 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-100"
+                      location.pathname === "/u/tasks" ? "bg-gray-700 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-100"
                     )}>
                       <ListTodo className="mr-2 h-4 w-4" />
                       Tarefas
@@ -175,10 +175,10 @@ const Navigation = () => {
               {isLoggedIn && (
                 <>
                   <Link
-                    to="/dashboard"
+                    to="/u/dashboard"
                     className={cn(
                       "flex items-center px-4 py-3 text-white rounded-md",
-                      location.pathname === "/dashboard" ? "bg-gray-700" : "bg-gray-800 hover:bg-gray-700"
+                      location.pathname === "/u/dashboard" ? "bg-gray-700" : "bg-gray-800 hover:bg-gray-700"
                     )}
                     onClick={toggleMobileMenu}
                   >
@@ -187,10 +187,10 @@ const Navigation = () => {
                   </Link>
 
                   <Link
-                    to="/tasks"
+                    to="/u/tasks"
                     className={cn(
                       "flex items-center px-4 py-3 text-white rounded-md",
-                      location.pathname === "/tasks" ? "bg-gray-700" : "bg-gray-800 hover:bg-gray-700"
+                      location.pathname === "/u/tasks" ? "bg-gray-700" : "bg-gray-800 hover:bg-gray-700"
                     )}
                     onClick={toggleMobileMenu}
                   >

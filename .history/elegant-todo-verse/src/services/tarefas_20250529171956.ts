@@ -10,7 +10,7 @@ const getTask = async (usuario:string) => {
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ usuario: usuario })
+          body: JSON.stringify({ usuario:usuario })
         });
         if (!res.ok) {
           const text = await res.text();

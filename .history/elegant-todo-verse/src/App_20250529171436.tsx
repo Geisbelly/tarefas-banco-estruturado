@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
-import Statistics from "@/pages/Statistics";
+import Statistics from "@/pages/u/Statistics";
 import TaskList from "@/pages/TaskList";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -27,7 +27,7 @@ const App = () => (
 
             {/* ROTAS PROTEGIDAS */}
             <Route element={<PrivateRoute />}>
-              <Route path="/dashboard" element={<Statistics />} />
+              <Route path="/u/dashboard" element={<Statistics />} />
               <Route path="/tasks" element={<TaskList />} />
             </Route>
 

@@ -24,7 +24,7 @@ const Auth = () => {
   // Verificar se já está logado ao carregar a página
   useEffect(() => {
     if (localStorage.getItem('isLoggedIn') === 'true') {
-      navigate('/dashboard');
+      navigate('/u/dashboard');
     }
   }, [navigate]);
 

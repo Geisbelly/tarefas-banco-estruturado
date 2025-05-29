@@ -60,7 +60,6 @@ const Navigation = () => {
   const handleLogout = () => {
     // Simulação de logout
     localStorage.setItem('isLoggedIn', 'false');
-    localStorage.removeItem('user'); // Limpar dados do usuário
     setIsLoggedIn(false);
     
     toast({
@@ -116,7 +115,7 @@ const Navigation = () => {
                       Dashboard
                     </Link>
                   </NavigationMenuItem>
-
+                  
                   <NavigationMenuItem>
                     <Link to="/tasks" className={cn(
                       navigationMenuTriggerStyle(),
@@ -174,8 +173,8 @@ const Navigation = () => {
             <div className="container px-4 py-6 flex flex-col space-y-4">
               {isLoggedIn && (
                 <>
-                  <Link
-                    to="/dashboard"
+                  <Link 
+                    to="/dashboard" 
                     className={cn(
                       "flex items-center px-4 py-3 text-white rounded-md",
                       location.pathname === "/dashboard" ? "bg-gray-700" : "bg-gray-800 hover:bg-gray-700"
@@ -185,9 +184,9 @@ const Navigation = () => {
                     <BarChart className="mr-3 h-5 w-5" />
                     Dashboard
                   </Link>
-
-                  <Link
-                    to="/tasks"
+                
+                  <Link 
+                    to="/tasks" 
                     className={cn(
                       "flex items-center px-4 py-3 text-white rounded-md",
                       location.pathname === "/tasks" ? "bg-gray-700" : "bg-gray-800 hover:bg-gray-700"
