@@ -25,15 +25,15 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
 
-            {/* Aqui você protege tudo que tiver dentro da pasta /u */}
-            <Route element={<PrivateRoute />}>
-              <Route path="/u/dashboard" element={<Statistics />} />
-              <Route path="/u/tasks" element={<TaskList />} />
-            </Route>
+          {/* Aqui você protege tudo que tiver dentro da pasta /u */}
+          <Route element={<PrivateRoute />}>
+            <Route path="/u/dashboard" element={<Statistics />} />
+            <Route path="/u/tasks" element={<TaskList />} />
+          </Route>
 
-            <Route path="/auth" element={<Auth />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Route path="/auth" element={<Auth />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
         </div>
       </BrowserRouter>
     </TooltipProvider>

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
-import { postUser, login } from "@/services/tarefas";
+import { postUser } from "@/services/tarefas";
 
 
 const Auth = () => {
@@ -31,26 +31,21 @@ const Auth = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
-    login(loginEmail, loginPassword).then((user) => {
+    
+    // Simulando autenticação
+    setTimeout(() => {
       setIsLoading(false);
-      if (user) {
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('user', JSON.stringify(user));
-        toast({
-          title: "Login realizado!",
-          description: "Você foi autenticado com sucesso.",
-        });
+      // Aceitar qualquer login para demonstração
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('user', JSON.stringify({email: loginEmail, nome: "Usuário"})); // Simulando usuário autenticado
 
-        navigate('/u/dashboard');
-      }
-    }).catch((error) => {
-      setIsLoading(false);
       toast({
-        title: "Erro ao realizar login",
-        description: error.message,
+        title: "Login realizado!",
+        description: "Você foi autenticado com sucesso.",
       });
-    });
+      
+      navigate('/u/dashboard');
+    }, 1500);
   };
 
   const clear = ()=>{

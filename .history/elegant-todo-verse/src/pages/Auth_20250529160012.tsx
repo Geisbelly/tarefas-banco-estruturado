@@ -7,8 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
-import { postUser, login } from "@/services/tarefas";
-
+import { postUser } from "@/services/tarefas";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -19,7 +18,6 @@ const Auth = () => {
   const [registerPassword, setRegisterPassword] = useState("");
   const [registerName, setRegisterName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
 
   // Verificar se já está logado ao carregar a página
   useEffect(() => {
@@ -31,26 +29,20 @@ const Auth = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
-    login(loginEmail, loginPassword).then((user) => {
+    
+    // Simulando autenticação
+    setTimeout(() => {
       setIsLoading(false);
-      if (user) {
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('user', JSON.stringify(user));
-        toast({
-          title: "Login realizado!",
-          description: "Você foi autenticado com sucesso.",
-        });
-
-        navigate('/u/dashboard');
-      }
-    }).catch((error) => {
-      setIsLoading(false);
+      // Aceitar qualquer login para demonstração
+      localStorage.setItem('isLoggedIn', 'true');
+      
       toast({
-        title: "Erro ao realizar login",
-        description: error.message,
+        title: "Login realizado!",
+        description: "Você foi autenticado com sucesso.",
       });
-    });
+      
+      navigate('/u/dashboard');
+    }, 1500);
   };
 
   const clear = ()=>{
@@ -75,7 +67,7 @@ const Auth = () => {
         description: "Sua conta foi criada com sucesso.",
       });
 
-      navigate('/u/dashboard')
+      navigate('/dashboard')
     }).catch(err => {
       console.error("Erro ao criar usuario:", err);
     }).finally(()=>{setIsLoading(false); clear()});

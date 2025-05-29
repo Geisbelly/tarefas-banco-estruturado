@@ -24,27 +24,6 @@ const getTask = async (usuario:string) => {
         console.error("Erro ao buscar tarefas:", err);
       }
 };
-const login = async (email: string, senha: string) => {
-      try {
-        const res = await fetch("api/auth", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ email, senha })
-        });
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`Erro ${res.status}: ${text}`);
-        }
-        const data = await res.json();
-
-        console.log("Dados recebidos:", data);
-        return data;
-      } catch (err) {
-        console.error("Erro ao buscar tarefas:", err);
-      }
-};
 const postTask = async (newTask:Task) => {
       try {
         const res = await fetch("api/tarefas", {
@@ -178,4 +157,4 @@ const deletarTarefa = async (id) => {
   }
 };
 
-export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario, deleteTaskCommentario,login};
+export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario, deleteTaskCommentario};

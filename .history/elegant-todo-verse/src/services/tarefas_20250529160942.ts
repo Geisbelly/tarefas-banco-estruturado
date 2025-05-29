@@ -26,12 +26,12 @@ const getTask = async (usuario:string) => {
 };
 const login = async (email: string, senha: string) => {
       try {
-        const res = await fetch("api/auth", {
+        const res = await fetch("api/auth/login", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ email, senha })
+          body: JSON.stringify(newTask)
         });
         if (!res.ok) {
           const text = await res.text();
@@ -178,4 +178,4 @@ const deletarTarefa = async (id) => {
   }
 };
 
-export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario, deleteTaskCommentario,login};
+export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario, deleteTaskCommentario};

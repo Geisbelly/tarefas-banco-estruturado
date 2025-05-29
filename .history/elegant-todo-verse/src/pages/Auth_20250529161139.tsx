@@ -39,18 +39,11 @@ const Auth = () => {
         localStorage.setItem('user', JSON.stringify(user));
         toast({
           title: "Login realizado!",
-          description: "Você foi autenticado com sucesso.",
-        });
-
-        navigate('/u/dashboard');
-      }
-    }).catch((error) => {
-      setIsLoading(false);
-      toast({
-        title: "Erro ao realizar login",
-        description: error.message,
+        description: "Você foi autenticado com sucesso.",
       });
-    });
+      
+      navigate('/u/dashboard');
+    }, 1500);
   };
 
   const clear = ()=>{

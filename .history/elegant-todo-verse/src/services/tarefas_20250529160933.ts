@@ -24,14 +24,14 @@ const getTask = async (usuario:string) => {
         console.error("Erro ao buscar tarefas:", err);
       }
 };
-const login = async (email: string, senha: string) => {
+const postTask = async (newTask:Task) => {
       try {
-        const res = await fetch("api/auth", {
+        const res = await fetch("api/tarefas", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ email, senha })
+          body: JSON.stringify(newTask)
         });
         if (!res.ok) {
           const text = await res.text();
@@ -178,4 +178,4 @@ const deletarTarefa = async (id) => {
   }
 };
 
-export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario, deleteTaskCommentario,login};
+export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario, deleteTaskCommentario};

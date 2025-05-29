@@ -13,7 +13,7 @@ const Index = () => {
     
     // Redirecionar para o dashboard se logado, ou para auth se não estiver
     if (isLoggedIn) {
-      navigate("/u/dashboard");
+      navigate("/dashboard");
     } else {
       navigate("/auth");
     }

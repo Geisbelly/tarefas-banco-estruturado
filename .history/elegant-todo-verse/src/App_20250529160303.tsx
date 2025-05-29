@@ -10,7 +10,6 @@ import TaskList from "./pages/u/TaskList";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Navigation from "./components/Navigation";
-import PrivateRoute from "./components/controle";
 
 const queryClient = new QueryClient();
 
@@ -24,13 +23,7 @@ const App = () => (
           <Navigation />
           <Routes>
             <Route path="/" element={<Index />} />
-
-            {/* Aqui você protege tudo que tiver dentro da pasta /u */}
-            <Route element={<PrivateRoute />}>
-              <Route path="/u/dashboard" element={<Statistics />} />
-              <Route path="/u/tasks" element={<TaskList />} />
-            </Route>
-
+            <Route path="/u/" element={<Statistics />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -3,7 +3,7 @@ import { criarTask,listarTarefas, updateTask, deleteTask, criarTaskComentario, d
 
 const router = express.Router();
 
-router.post('/u', listarTarefas);
+router.post('/', listarTarefas);
 router.post('/', criarTask);
 router.post('/comentario', criarTaskComentario);
 router.put('/:id', updateTask);

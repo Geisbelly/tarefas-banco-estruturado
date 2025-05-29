@@ -31,7 +31,7 @@ const login = async (email: string, senha: string) => {
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ email, senha })
+          body: JSON.stringify({})
         });
         if (!res.ok) {
           const text = await res.text();
@@ -178,4 +178,4 @@ const deletarTarefa = async (id) => {
   }
 };
 
-export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario, deleteTaskCommentario,login};
+export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario, deleteTaskCommentario};
