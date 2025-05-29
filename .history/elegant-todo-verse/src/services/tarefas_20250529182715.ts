@@ -144,13 +144,13 @@ const postUser = async (datas:{email:string, senha: string, nome: string}) => {
 
 const atualizarTarefa = async (id, dadosAtualizados) => {
   try {
-    console.log("Atualizando tarefa:", id, dadosAtualizados);
+    log("Atualizando tarefa:", id, dadosAtualizados);
     const response = await fetch(`api/tarefas/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ ...dadosAtualizados, id: id }),
+      body: JSON.stringify(dadosAtualizados),
     });
 
     if (!response.ok) {

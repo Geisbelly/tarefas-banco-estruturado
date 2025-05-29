@@ -206,7 +206,7 @@ export async function atualizarTarefa(id, updates) {
       Object.entries(updates).filter(([chave]) => chave !== "_id" && chave !== "id")
     );
 
-
+    // Atualização no banco
     const result = await tarefasCollection.updateOne(
       { _id: new ObjectId(id) },
       { $set: dadosFiltrados }

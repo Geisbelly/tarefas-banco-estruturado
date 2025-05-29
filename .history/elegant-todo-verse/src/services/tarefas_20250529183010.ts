@@ -150,7 +150,7 @@ const atualizarTarefa = async (id, dadosAtualizados) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ ...dadosAtualizados, id: id }),
+      body: JSON.stringify(..dadosAtualizados),
     });
 
     if (!response.ok) {

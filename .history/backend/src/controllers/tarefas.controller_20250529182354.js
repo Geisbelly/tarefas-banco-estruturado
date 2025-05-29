@@ -47,7 +47,7 @@ export const criarTaskComentario = async (req, res) => {
 export const updateTask = async (req, res) => {
   try {
     const id = req.body.id;          
-    const dadosNovos = req.body;        
+    const dadosNovos = req.body;         // Dados para atualizar
 
     // Supondo que atualizarTarefa(id, dadosNovos) retorne a tarefa atualizada
     const tarefaAtualizada = await atualizarTarefa(id, dadosNovos);

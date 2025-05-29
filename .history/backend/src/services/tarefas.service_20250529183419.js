@@ -192,26 +192,17 @@ export async function buscarTarefasPorTags(tags) {
 
 export async function atualizarTarefa(id, updates) {
   let tarefasCollection;
-
   try {
-    tarefasCollection = await connectToMongoDB(dbName, collectionName);
-
+    tarefasCollection = await connectToMongoDB(dbName,collectionName);
     if (!ObjectId.isValid(id)) {
       console.error("ID inválido para atualização:", id);
       return false;
     }
-
-
-    const dadosFiltrados = Object.fromEntries(
-      Object.entries(updates).filter(([chave]) => chave !== "_id" && chave !== "id")
-    );
-
-
+    const novos dados = { da };
     const result = await tarefasCollection.updateOne(
       { _id: new ObjectId(id) },
-      { $set: dadosFiltrados }
+      { $set: updates }
     );
-
     if (result.matchedCount === 0) {
       console.log(`Nenhuma tarefa encontrada com o ID ${id} para atualização.`);
       return false;
@@ -222,7 +213,6 @@ export async function atualizarTarefa(id, updates) {
       console.log(`Nenhuma alteração foi feita na tarefa com ID ${id}.`);
       return false;
     }
-
   } catch (err) {
     console.error(`Erro ao atualizar tarefa com ID ${id}:`, err);
     return false;

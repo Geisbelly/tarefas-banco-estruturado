@@ -194,19 +194,21 @@ export async function atualizarTarefa(id, updates) {
   let tarefasCollection;
 
   try {
+    // Conecta
     tarefasCollection = await connectToMongoDB(dbName, collectionName);
 
+    // Validação do ID
     if (!ObjectId.isValid(id)) {
       console.error("ID inválido para atualização:", id);
       return false;
     }
 
-
+    // Remove _id e id do objeto de updates
     const dadosFiltrados = Object.fromEntries(
       Object.entries(updates).filter(([chave]) => chave !== "_id" && chave !== "id")
     );
 
-
+    // Atualização no banco
     const result = await tarefasCollection.updateOne(
       { _id: new ObjectId(id) },
       { $set: dadosFiltrados }
