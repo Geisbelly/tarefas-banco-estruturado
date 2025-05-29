@@ -1,5 +1,5 @@
 
-import {Task, Comment} from '../types/task';
+import {Task} from '../types/task';
 
 const getTask = async () => {
       try {
@@ -40,12 +40,12 @@ const postTask = async (newTask:Task) => {
 };
 const postTaskCommentario = async (newComment: Comment) => {
       try {
-        const res = await fetch("api/tarefas/comentario", {
+        const res = await fetch("api/tarefas", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify(newComment)
+          body: JSON.stringify(newTask)
         });
         if (!res.ok) {
           const text = await res.text();
@@ -120,4 +120,4 @@ const deletarTarefa = async (id) => {
   }
 };
 
-export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario};
+export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser};

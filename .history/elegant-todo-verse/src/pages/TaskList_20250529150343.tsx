@@ -125,7 +125,7 @@ const TaskList = () => {
 
   const addComment = (taskId: string, autor: string, texto: string) => {
     const newComment = {
-      id: taskId,
+      id: Date.now().toString(),
       autor,
       texto,
       dataComentario: new Date()

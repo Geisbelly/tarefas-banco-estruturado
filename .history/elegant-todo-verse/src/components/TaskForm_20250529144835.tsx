@@ -21,9 +21,7 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask }: TaskFormProp
   const [colaboradores, setColaboradores] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
-  const [newColaborador, setNewColaborador] = useState("");
   const [cabecalho, setCabecalho] = useState('Criar Tarefa');
-  const [mensagem, setMensagem] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     if (onUpdateTask && task) {
@@ -53,7 +51,7 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask }: TaskFormProp
       return;
     }
     e.preventDefault();
-    if (titulo.trim() ) {
+    if (titulo.trim()) {
       onCreateTask({
         titulo: titulo.trim(),
         descricao: descricao.trim(),
@@ -93,37 +91,6 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask }: TaskFormProp
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
-  const isEmailValido = (email) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-  };
-
-  const addColaborador = () => {
-    const email = newColaborador.trim();
-
-    if (!email) return;
-
-    if (!isEmailValido(email)) {
-      setMensagem("E-mail inválido. Tente um email válido.");
-
-      // Faz a mensagem sumir depois de 3 segundos
-      setTimeout(() => setMensagem(""), 3000);
-
-      return;
-    }
-
-    if (!colaboradores.includes(email)) {
-      setColaboradores([...colaboradores, email]);
-      setNewColaborador("");
-    } else {
-      setMensagem("Esse e-mail já está na lista!");
-       setTimeout(() => setMensagem(""), 3000);
-    }
-  };
-
-  const removeColaborador = (colaboradorToRemove: string) => {
-    setColaboradores(colaboradores.filter(colaborador => colaborador !== colaboradorToRemove));
-  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 mt-4">
@@ -162,30 +129,25 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask }: TaskFormProp
       <div>
         <div className="flex gap-2 mb-2">
           <Input
-            placeholder="Adicionar colaborador(es)"
-            value={newColaborador}
-            onChange={(e) => setNewColaborador(e.target.value)}
+            placeholder="Adicionar tag"
+            value={newTag}
+            onChange={(e) => setNewTag(e.target.value)}
             className="bg-gray-800/50 border-gray-600 text-white flex-1"
-            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addColaborador())}
+            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
           />
-          <Button type="button" onClick={addColaborador} variant="outline" className="border-gray-600">
+          <Button type="button" onClick={addTag} variant="outline" className="border-gray-600">
             <Plus className="w-4 h-4" />
           </Button>
         </div>
-        {mensagem && (
-          <div className="text-red-500 text-sm mb-2">
-            {mensagem}
-          </div>
-        )}
-
-        {colaboradores.length > 0 && (
+        
+        {tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {colaboradores.map((colaborador, index) => (
+            {tags.map((tag, index) => (
               <Badge key={index} variant="outline" className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                {colaborador}
+                {tag}
                 <button
                   type="button"
-                  onClick={() => removeColaborador(colaborador)}
+                  onClick={() => removeTag(tag)}
                   className="ml-1 hover:text-red-300"
                 >
                   <X className="w-3 h-3" />

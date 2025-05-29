@@ -104,7 +104,7 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask }: TaskFormProp
     if (!email) return;
 
     if (!isEmailValido(email)) {
-      setMensagem("E-mail inválido. Tente um email válido.");
+      setMensagem("E-mail inválido. Tenta de novo, mas dessa vez com fé.");
 
       // Faz a mensagem sumir depois de 3 segundos
       setTimeout(() => setMensagem(""), 3000);

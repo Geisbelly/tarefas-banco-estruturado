@@ -16,14 +16,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { getTask,postTask, atualizarTarefa, deletarTarefa, postTaskCommentario } from "../services/tarefas";
+import { getTask,postTask, atualizarTarefa, deletarTarefa } from "../services/tarefas";
 
 const TaskList = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filters, setFilters] = useState<TaskFilters>({
     status: "",
-    criador: "",
-    colaboradores: [],
+    
     tags: "",
     titulo: "",
     dataInicio: "",
@@ -125,24 +124,21 @@ const TaskList = () => {
 
   const addComment = (taskId: string, autor: string, texto: string) => {
     const newComment = {
-      id: taskId,
+      id: Date.now().toString(),
       autor,
       texto,
       dataComentario: new Date()
     };
-
-    postTaskCommentario({ autor, texto, dataComentario: newComment.dataComentario, id: newComment.id }).then(() => {
-      setTasks(tasks.map(task =>
-        task._id === taskId
-          ? { ...task, comentarios: [...task.comentarios, newComment] }
-          : task
-      ));
-      toast({
-        title: "Comentário adicionado!",
-        description: `"${texto}" foi adicionado com sucesso.`,
-      });
-    }).catch(err => {
-      console.error("Erro ao criar comentário:", err);
+    
+    setTasks(tasks.map(task => 
+      task._id === taskId 
+        ? { ...task, comentarios: [...task.comentarios, newComment] }
+        : task
+    ));
+    
+    toast({
+      title: "Comentário adicionado!",
+      description: "Seu comentário foi salvo.",
     });
   };
 

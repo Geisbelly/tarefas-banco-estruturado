@@ -1,5 +1,5 @@
 
-import {Task, Comment} from '../types/task';
+import {Task} from '../types/task';
 
 const getTask = async () => {
       try {

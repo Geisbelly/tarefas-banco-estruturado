@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get('/', listarTarefas);
 router.post('/', criarTask);
-router.post('/comentario', criarTaskComentario);
+router.post('/comentario', criarTask);
 router.put('/:id', updateTask);
 router.delete('/:id', deleteTask);
 

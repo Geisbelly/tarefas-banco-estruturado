@@ -104,20 +104,19 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask }: TaskFormProp
     if (!email) return;
 
     if (!isEmailValido(email)) {
-      setMensagem("E-mail inválido. Tente um email válido.");
+  setMensagem("E-mail inválido. Tenta de novo, mas dessa vez com fé.");
 
-      // Faz a mensagem sumir depois de 3 segundos
-      setTimeout(() => setMensagem(""), 3000);
+  // Faz a mensagem sumir depois de 3 segundos
+  setTimeout(() => setMensagem(""), 3000);
 
-      return;
-    }
+  return;
+}
 
     if (!colaboradores.includes(email)) {
       setColaboradores([...colaboradores, email]);
       setNewColaborador("");
     } else {
-      setMensagem("Esse e-mail já está na lista!");
-       setTimeout(() => setMensagem(""), 3000);
+      setMensagem("Esse e-mail já está na lista, ó!");
     }
   };
 
@@ -172,11 +171,6 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask }: TaskFormProp
             <Plus className="w-4 h-4" />
           </Button>
         </div>
-        {mensagem && (
-          <div className="text-red-500 text-sm mb-2">
-            {mensagem}
-          </div>
-        )}
 
         {colaboradores.length > 0 && (
           <div className="flex flex-wrap gap-2">

@@ -20,8 +20,7 @@ export interface Task {
 
 export interface TaskFilters {
   status: string;
-  criador: string;
-  colaboradores: string[];
+  
   tags: string;
   titulo: string;
   dataInicio: string;

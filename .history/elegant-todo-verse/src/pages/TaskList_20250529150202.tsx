@@ -124,25 +124,33 @@ const TaskList = () => {
   };
 
   const addComment = (taskId: string, autor: string, texto: string) => {
-    const newComment = {
-      id: taskId,
-      autor,
-      texto,
-      dataComentario: new Date()
-    };
-
-    postTaskCommentario({ autor, texto, dataComentario: newComment.dataComentario, id: newComment.id }).then(() => {
-      setTasks(tasks.map(task =>
-        task._id === taskId
-          ? { ...task, comentarios: [...task.comentarios, newComment] }
-          : task
-      ));
+    postTaskCommentario({ taskId, autor, texto }).then((e) => {
+      const novaTarefa = { _id: e, ...newTask }
+      console.log("Tarefa criada com sucesso:", novaTarefa);
+      setTasks((prev) => [novaTarefa, ...prev]);
       toast({
         title: "Comentário adicionado!",
         description: `"${texto}" foi adicionado com sucesso.`,
       });
     }).catch(err => {
-      console.error("Erro ao criar comentário:", err);
+      console.error("Erro ao criar tarefa:", err);
+    });
+    const newComment = {
+      id: Date.now().toString(),
+      autor,
+      texto,
+      dataComentario: new Date()
+    };
+    
+    setTasks(tasks.map(task => 
+      task._id === taskId 
+        ? { ...task, comentarios: [...task.comentarios, newComment] }
+        : task
+    ));
+    
+    toast({
+      title: "Comentário adicionado!",
+      description: "Seu comentário foi salvo.",
     });
   };
 

@@ -1,5 +1,5 @@
 
-import {Task, Comment} from '../types/task';
+import {Task} from '../types/task';
 
 const getTask = async () => {
       try {
@@ -25,27 +25,6 @@ const postTask = async (newTask:Task) => {
             "Content-Type": "application/json"
           },
           body: JSON.stringify(newTask)
-        });
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`Erro ${res.status}: ${text}`);
-        }
-        const data = await res.json();
-
-        console.log("Dados recebidos:", data);
-        return data;
-      } catch (err) {
-        console.error("Erro ao buscar tarefas:", err);
-      }
-};
-const postTaskCommentario = async (newComment: Comment) => {
-      try {
-        const res = await fetch("api/tarefas/comentario", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(newComment)
         });
         if (!res.ok) {
           const text = await res.text();
@@ -120,4 +99,4 @@ const deletarTarefa = async (id) => {
   }
 };
 
-export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario};
+export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser};

@@ -12,16 +12,13 @@ export interface Task {
   descricao: string;
   dataCriacao: Date;
   status: "pendente" | "em andamento" | "concluida";
-  criador: string;
-  colaboradores: string[];
+  cr
   tags: string[];
   comentarios: Comment[];
 }
 
 export interface TaskFilters {
   status: string;
-  criador: string;
-  colaboradores: string[];
   tags: string;
   titulo: string;
   dataInicio: string;

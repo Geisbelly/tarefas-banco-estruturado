@@ -23,7 +23,6 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask }: TaskFormProp
   const [newTag, setNewTag] = useState("");
   const [newColaborador, setNewColaborador] = useState("");
   const [cabecalho, setCabecalho] = useState('Criar Tarefa');
-  const [mensagem, setMensagem] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     if (onUpdateTask && task) {
@@ -53,7 +52,7 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask }: TaskFormProp
       return;
     }
     e.preventDefault();
-    if (titulo.trim() ) {
+    if (titulo.trim()) {
       onCreateTask({
         titulo: titulo.trim(),
         descricao: descricao.trim(),
@@ -93,33 +92,28 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask }: TaskFormProp
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
-  const isEmailValido = (email) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-  };
+ const isEmailValido = (email) => {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+};
 
-  const addColaborador = () => {
-    const email = newColaborador.trim();
+const addColaborador = () => {
+  const email = newColaborador.trim();
 
-    if (!email) return;
+  if (!email) return;
 
-    if (!isEmailValido(email)) {
-      setMensagem("E-mail inválido. Tente um email válido.");
+  if (!isEmailValido(email)) {
+    alert("E-mail inválido. Tenta de novo, mas dessa vez com fé.");
+    return;
+  }
 
-      // Faz a mensagem sumir depois de 3 segundos
-      setTimeout(() => setMensagem(""), 3000);
-
-      return;
-    }
-
-    if (!colaboradores.includes(email)) {
-      setColaboradores([...colaboradores, email]);
-      setNewColaborador("");
-    } else {
-      setMensagem("Esse e-mail já está na lista!");
-       setTimeout(() => setMensagem(""), 3000);
-    }
-  };
+  if (!colaboradores.includes(email)) {
+    setColaboradores([...colaboradores, email]);
+    setNewColaborador("");
+  } else {
+    alert("Esse e-mail já está na lista, ó!");
+  }
+};
 
   const removeColaborador = (colaboradorToRemove: string) => {
     setColaboradores(colaboradores.filter(colaborador => colaborador !== colaboradorToRemove));
@@ -172,11 +166,6 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask }: TaskFormProp
             <Plus className="w-4 h-4" />
           </Button>
         </div>
-        {mensagem && (
-          <div className="text-red-500 text-sm mb-2">
-            {mensagem}
-          </div>
-        )}
 
         {colaboradores.length > 0 && (
           <div className="flex flex-wrap gap-2">

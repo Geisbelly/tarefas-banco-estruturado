@@ -1,5 +1,5 @@
 
-import {Task, Comment} from '../types/task';
+import {Task} from '../types/task';
 
 const getTask = async () => {
       try {
@@ -38,27 +38,6 @@ const postTask = async (newTask:Task) => {
         console.error("Erro ao buscar tarefas:", err);
       }
 };
-const postTaskCommentario = async (newComment: Comment) => {
-      try {
-        const res = await fetch("api/tarefas/comentario", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(newComment)
-        });
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`Erro ${res.status}: ${text}`);
-        }
-        const data = await res.json();
-
-        console.log("Dados recebidos:", data);
-        return data;
-      } catch (err) {
-        console.error("Erro ao buscar tarefas:", err);
-      }
-};
 const postUser = async (datas:{email:string, senha: string, nome: string}) => {
       try {
         const res = await fetch("api/cadastre", {
@@ -83,7 +62,7 @@ const postUser = async (datas:{email:string, senha: string, nome: string}) => {
 
 const atualizarTarefa = async (id, dadosAtualizados) => {
   try {
-    const response = await fetch(`api/tarefas/${id}`, {
+    const response = await fetch(`https://tarefas-banco-estruturado.onrender.com/tarefas/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -104,7 +83,7 @@ const atualizarTarefa = async (id, dadosAtualizados) => {
 };
 const deletarTarefa = async (id) => {
   try {
-    const response = await fetch(`api/tarefas/${id}`, {
+    const response = await fetch(`https://tarefas-banco-estruturado.onrender.com/tarefas/${id}`, {
       method: 'DELETE'
     });
 
@@ -120,4 +99,4 @@ const deletarTarefa = async (id) => {
   }
 };
 
-export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario};
+export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser};

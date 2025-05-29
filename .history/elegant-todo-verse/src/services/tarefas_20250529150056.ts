@@ -1,5 +1,5 @@
 
-import {Task, Comment} from '../types/task';
+import {Task} from '../types/task';
 
 const getTask = async () => {
       try {
@@ -120,4 +120,4 @@ const deletarTarefa = async (id) => {
   }
 };
 
-export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario};
+export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser};

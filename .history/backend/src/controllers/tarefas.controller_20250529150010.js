@@ -30,14 +30,14 @@ export const criarTask = async (req, res) => {
     res.status(500).json({ error: 'Erro interno ao criar tarefa' });
   }
 };
-export const criarTaskComentario = async (req, res) => {
+export const criarTask = async (req, res) => {
   try {
     const body = req.body;
-    const novoComentario = await adicionarComentario(body.taskId, body.autor, body.texto);
-    res.status(201).json(novoComentario);
+    const novaTarefa = await criarTarefa(body.titulo, body.descricao, body.status, body.tags, body.dataCriacao, body.dataConclusao, body.comentarios);
+    res.status(201).json(novaTarefa);
   } catch (error) {
-    console.error('Erro ao criar comentário:', error);
-    res.status(500).json({ error: 'Erro interno ao criar comentário' });
+    console.error('Erro ao criar tarefa:', error);
+    res.status(500).json({ error: 'Erro interno ao criar tarefa' });
   }
 };
 
