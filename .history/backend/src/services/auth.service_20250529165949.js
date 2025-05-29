@@ -57,40 +57,4 @@ export async function login(email, senha) {
 }
 
 
-export async function criarUsuario(nome, email, senha) {
-  let usuariosCollection;
-
-  try {
-    usuariosCollection = await connectToMongoDB(dbName, collectionName);
-
-    // Verifica se o usuário já existe
-    const usuarioExistente = await usuariosCollection.findOne({ email });
-    if (usuarioExistente) {
-      console.log(`Usuário com email ${email} já existe.`);
-      return null;
-    }
-
-    // Criptografa a senha
-    const senhaCriptografada = await bcrypt.hash(senha, 10);
-
-    const novoUsuario = {
-      nome,
-      email,
-      senha: senhaCriptografada,
-    };
-
-    const resultado = await usuariosCollection.insertOne(novoUsuario);
-    console.log(`Usuário ${nome} criado com sucesso!`);
-
-    // Retorna apenas nome e email
-    return {
-      nome: novoUsuario.nome,
-      email: novoUsuario.email
-    };
-  } catch (err) {
-    console.error('Erro ao criar usuário:', err);
-    return null;
-  } finally {
-    if (usuariosCollection) await closeMongoDBConnection();
-  }
-}
+export

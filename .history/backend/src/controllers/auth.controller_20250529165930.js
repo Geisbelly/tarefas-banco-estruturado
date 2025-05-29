@@ -32,3 +32,22 @@ export const loginin = async (req, res) => {
 };
 
 
+export const updateUser = async (req, res) => {
+  try {
+    const id = req.params.id;            // Pega o id da URL
+    const dadosNovos = req.body;         // Dados para atualizar
+
+    // Supondo que atualizarUsuario(id, dadosNovos) retorne o usuário atualizado
+    const usuarioAtualizado = await atualizarUsuario(id, dadosNovos);
+
+    if (!usuarioAtualizado) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    res.status(200).json(usuarioAtualizado); // Retorna o usuário atualizado
+  } catch (error) {
+    console.error('Erro ao atualizar usuário:', error);
+    res.status(500).json({ error: 'Erro interno ao atualizar usuário' });
+  }
+};
+
