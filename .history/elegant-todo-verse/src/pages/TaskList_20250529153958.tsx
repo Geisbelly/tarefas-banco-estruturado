@@ -149,7 +149,7 @@ const TaskList = () => {
   };
 
   const deleteComment = (taskId: string, comentarioId: string) => {
-    console.log("Excluindo comentário:", comentarioId, "da tarefa:", taskId);
+    conlog("Excluindo comentário:", comentarioId);
     deleteTaskCommentario(taskId, comentarioId).then(() => {
       console.log("Comentário excluído com sucesso:", comentarioId);
       setTasks(tasks.map(task => 

@@ -66,7 +66,7 @@ const postTaskCommentario = async (newComment: Comment) => {
 };
 const deleteTaskCommentario = async (taskId: string, comentarioId: string) => {
       try {
-        console.log("Deletando comentário:", { taskId, comentarioId });
+        clog
         const res = await fetch("api/tarefas/comentario", {
           method: "DELETE",
           headers: {

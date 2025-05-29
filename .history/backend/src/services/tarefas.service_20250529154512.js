@@ -230,7 +230,7 @@ export async function deletarComentario(taskId, comentarioId) {
   try {
     tarefasCollection = await connectToMongoDB(dbName, collectionName);
 
-    console.log(`Tentando deletar comentário ${comentarioId} da tarefa ${taskId}...`);
+    console.log()
 
     if (!ObjectId.isValid(taskId) || !ObjectId.isValid(comentarioId)) {
       console.error("ID de tarefa ou comentário inválido:", taskId, comentarioId);
