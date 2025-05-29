@@ -25,7 +25,7 @@ const collectionName = 'tarefas';
  * @property {'pendente' | 'em andamento' | 'concluida'} status
  * @property {string[]} tags
  * @property {string[]} colaboradores
- * @property {string[]} criador
+ * @property {string[]} cria
  * @property {Comentario[]} comentarios
  */
 
@@ -34,8 +34,6 @@ const collectionName = 'tarefas';
 export async function criarTarefa(
   titulo,
   descricao,
-  criador,
-  colaboradores = [],
   status,
   tags = []
 ) {
@@ -54,8 +52,7 @@ export async function criarTarefa(
       descricao,
       dataCriacao: new Date(),
       status: (status) || "pendente",
-      criador,
-      colaboradores,
+      
       tags,
       comentarios: []
     };
@@ -198,7 +195,6 @@ export async function adicionarComentario(tarefaId, autor, texto) {
       return false;
     }
     const novoComentario = {
-      _id: new ObjectId(),
       autor,
       texto,
       dataComentario: new Date()
@@ -219,37 +215,6 @@ export async function adicionarComentario(tarefaId, autor, texto) {
     }
   } catch (err) {
     console.error(`Erro ao adicionar comentário na tarefa ${tarefaId}:`, err);
-    return false;
-  } finally {
-    if (tarefasCollection) await closeMongoDBConnection();
-  }
-}
-
-export async function deletarComentario(taskId, comentarioId) {
-  let tarefasCollection;
-  try {
-    tarefasCollection = await connectToMongoDB(dbName, collectionName);
-
-    if (!ObjectId.isValid(taskId) || !ObjectId.isValid(comentarioId)) {
-      console.error("ID de tarefa ou comentário inválido:", taskId, comentarioId);
-      return false;
-    }
-
-    const result = await tarefasCollection.updateOne(
-      { _id: new ObjectId(taskId) },
-      { $pull: { comentarios: { _id: new ObjectId(comentarioId) } } }
-    );
-
-    if (result.modifiedCount > 0) {
-      console.log(`Comentário ${comentarioId} removido com sucesso da tarefa ${taskId}!`);
-      return true;
-    } else {
-      console.log(`Nenhum comentário foi removido. Verifique se o ID do comentário existe.`);
-      return false;
-    }
-
-  } catch (err) {
-    console.error(`Erro ao deletar comentário ${comentarioId} da tarefa ${taskId}:`, err);
     return false;
   } finally {
     if (tarefasCollection) await closeMongoDBConnection();

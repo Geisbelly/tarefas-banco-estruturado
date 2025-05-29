@@ -149,4 +149,4 @@ const deletarTarefa = async (id) => {
   }
 };
 
-export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario, deleteTaskCommentario};
+export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario};

@@ -87,7 +87,11 @@ const deleteTaskCommentario = async (taskId: string, comentarioId: string) => {
         console.error("Erro ao buscar tarefas:", err);
       }
 };
-       
+const postUser = async (datas:{email:string, senha: string, nome: string}) => {
+      } catch (err) {
+        console.error("Erro ao buscar tarefas:", err);
+      }
+};
 const postUser = async (datas:{email:string, senha: string, nome: string}) => {
       try {
         const res = await fetch("api/cadastre", {
@@ -149,4 +153,4 @@ const deletarTarefa = async (id) => {
   }
 };
 
-export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario, deleteTaskCommentario};
+export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario};

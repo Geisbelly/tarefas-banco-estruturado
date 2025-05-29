@@ -8,6 +8,6 @@ router.post('/', criarTask);
 router.post('/comentario', criarTaskComentario);
 router.put('/:id', updateTask);
 router.delete('/:id', deleteTask);
-router.delete('/comentario', deletarComentarioTask);
+router.delete('/comentario', deleteTask);
 
 export default router;

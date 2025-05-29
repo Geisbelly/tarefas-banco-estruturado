@@ -148,26 +148,28 @@ const TaskList = () => {
     });
   };
 
-  const deleteComment = (taskId: string, comentarioId: string) => {
-    deleteTaskCommentario(taskId, comentarioId).then(() => {
-      console.log("Comentário excluído com sucesso:", comentarioId);
-      setTasks(tasks.map(task => 
-      task._id === taskId 
-          ? { 
-              ...task, 
-              comentarios: task.comentarios.filter(comment => comment._id !== comentarioId) 
-            }
-          : task
-      ));
-      toast({
-        title: "Comentário removido!",
-        description: "O comentário foi excluído.",
-      });
+  const deleteComment = (taskId: string, commentId: string) => {
+    deleteTaskCommentario(taskId,commentId).then(() => {
+      console.log("Comentário excluído com sucesso:", commentId);
     }
     ).catch(err => {
       console.error("Erro ao excluir comentário:", err);
     }
     );
+
+    setTasks(tasks.map(task => 
+      task._id === taskId 
+        ? { 
+            ...task, 
+            comentarios: task.comentarios.filter(comment => comment._id !== commentId) 
+          }
+        : task
+    ));
+    
+    toast({
+      title: "Comentário removido!",
+      description: "O comentário foi excluído.",
+    });
   };
 
   const filteredTasks = tasks.filter(task => {

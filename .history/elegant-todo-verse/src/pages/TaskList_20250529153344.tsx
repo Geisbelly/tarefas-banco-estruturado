@@ -153,21 +153,21 @@ const TaskList = () => {
       console.log("Comentário excluído com sucesso:", comentarioId);
       setTasks(tasks.map(task => 
       task._id === taskId 
-          ? { 
-              ...task, 
-              comentarios: task.comentarios.filter(comment => comment._id !== comentarioId) 
-            }
-          : task
-      ));
-      toast({
-        title: "Comentário removido!",
-        description: "O comentário foi excluído.",
-      });
+        ? { 
+            ...task, 
+            comentarios: task.comentarios.filter(comment => comment._id !== comentarioId) 
+          }
+        : task
+    ));
     }
     ).catch(err => {
       console.error("Erro ao excluir comentário:", err);
     }
     );
+
+    
+    
+   
   };
 
   const filteredTasks = tasks.filter(task => {

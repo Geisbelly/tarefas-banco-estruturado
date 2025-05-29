@@ -249,7 +249,7 @@ export async function deletarComentario(taskId, comentarioId) {
     }
 
   } catch (err) {
-    console.error(`Erro ao deletar comentário ${comentarioId} da tarefa ${taskId}:`, err);
+    console.error(`Erro ao deletar comentário ${comentarioId} da tarefa ${tarefaId}:`, err);
     return false;
   } finally {
     if (tarefasCollection) await closeMongoDBConnection();

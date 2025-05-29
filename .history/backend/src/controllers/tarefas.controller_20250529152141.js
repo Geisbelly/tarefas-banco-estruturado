@@ -7,8 +7,7 @@ import {
     buscarTarefasPorStatus,
     buscarTarefasPorTags,
     deletarTarefa,
-    criarTarefa,
-    deletarComentario
+    criarTarefa
  } from '../services/tarefas.service.js';
 
 export const listarTarefas = async (req, res) => {
@@ -24,7 +23,7 @@ export const listarTarefas = async (req, res) => {
 export const criarTask = async (req, res) => {
   try {
     const body = req.body;
-    const novaTarefa = await criarTarefa(body.titulo, body.descricao, body.criador, body.colaboradores, body.status, body.tags, body.dataCriacao, body.dataConclusao, body.comentarios);
+    const novaTarefa = await criarTarefa(body.titulo, body.descricao, body body.status, body.tags, body.dataCriacao, body.dataConclusao, body.comentarios);
     res.status(201).json(novaTarefa);
   } catch (error) {
     console.error('Erro ao criar tarefa:', error);
@@ -76,21 +75,4 @@ export const deleteTask = async (req, res) => {
     res.status(500).json({ error: 'Erro interno ao deletar tarefa' });
   }
 };
-
-export const deletarComentarioTask = async (req, res) => {
-  try {
-    const { taskId, comentarioId } = req.body;
-
-    const comentarioDeletado = await deletarComentario(taskId, comentarioId);
-
-    if (!comentarioDeletado) {
-      return res.status(404).json({ error: 'Comentário não encontrado' });
-    }
-
-    res.status(200).json(comentarioDeletado); // Retorna o comentário deletado
-  } catch (error) {
-    console.error('Erro ao deletar comentário:', error);
-    res.status(500).json({ error: 'Erro interno ao deletar comentário' });
-  }
-}
 

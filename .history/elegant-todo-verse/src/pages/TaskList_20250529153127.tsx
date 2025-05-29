@@ -16,7 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { getTask,postTask, atualizarTarefa, deletarTarefa, postTaskCommentario, deleteTaskCommentario } from "../services/tarefas";
+import { getTask,postTask, atualizarTarefa, deletarTarefa, postTaskCommentario } from "../services/tarefas";
 import { log } from "console";
 
 const TaskList = () => {
@@ -148,26 +148,21 @@ const TaskList = () => {
     });
   };
 
-  const deleteComment = (taskId: string, comentarioId: string) => {
-    deleteTaskCommentario(taskId, comentarioId).then(() => {
-      console.log("Comentário excluído com sucesso:", comentarioId);
-      setTasks(tasks.map(task => 
+  const deleteComment = (taskId: string, commentId: string) => {
+    
+    setTasks(tasks.map(task => 
       task._id === taskId 
-          ? { 
-              ...task, 
-              comentarios: task.comentarios.filter(comment => comment._id !== comentarioId) 
-            }
-          : task
-      ));
-      toast({
-        title: "Comentário removido!",
-        description: "O comentário foi excluído.",
-      });
-    }
-    ).catch(err => {
-      console.error("Erro ao excluir comentário:", err);
-    }
-    );
+        ? { 
+            ...task, 
+            comentarios: task.comentarios.filter(comment => comment._id !== commentId) 
+          }
+        : task
+    ));
+    
+    toast({
+      title: "Comentário removido!",
+      description: "O comentário foi excluído.",
+    });
   };
 
   const filteredTasks = tasks.filter(task => {

@@ -71,8 +71,9 @@ const deleteTaskCommentario = async (taskId: string, comentarioId: string) => {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            taskId,
-            comentarioId
+            taskId: newComment._id,
+            autor: newComment.autor,
+            texto: newComment.texto,
           })
         });
         if (!res.ok) {
@@ -87,7 +88,6 @@ const deleteTaskCommentario = async (taskId: string, comentarioId: string) => {
         console.error("Erro ao buscar tarefas:", err);
       }
 };
-       
 const postUser = async (datas:{email:string, senha: string, nome: string}) => {
       try {
         const res = await fetch("api/cadastre", {
@@ -149,4 +149,4 @@ const deletarTarefa = async (id) => {
   }
 };
 
-export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario, deleteTaskCommentario};
+export  {postTask, getTask, atualizarTarefa, deletarTarefa,postUser,postTaskCommentario};

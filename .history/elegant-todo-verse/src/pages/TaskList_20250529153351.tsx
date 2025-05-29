@@ -168,6 +168,10 @@ const TaskList = () => {
       console.error("Erro ao excluir comentário:", err);
     }
     );
+
+    
+    
+   
   };
 
   const filteredTasks = tasks.filter(task => {

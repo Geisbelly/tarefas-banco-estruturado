@@ -241,7 +241,7 @@ export async function deletarComentario(taskId, comentarioId) {
     );
 
     if (result.modifiedCount > 0) {
-      console.log(`Comentário ${comentarioId} removido com sucesso da tarefa ${taskId}!`);
+      console.log(`Comentário ${comentarioId} removido com sucesso da tarefa ${tarefaId}!`);
       return true;
     } else {
       console.log(`Nenhum comentário foi removido. Verifique se o ID do comentário existe.`);
@@ -249,7 +249,7 @@ export async function deletarComentario(taskId, comentarioId) {
     }
 
   } catch (err) {
-    console.error(`Erro ao deletar comentário ${comentarioId} da tarefa ${taskId}:`, err);
+    console.error(`Erro ao deletar comentário ${comentarioId} da tarefa ${tarefaId}:`, err);
     return false;
   } finally {
     if (tarefasCollection) await closeMongoDBConnection();
