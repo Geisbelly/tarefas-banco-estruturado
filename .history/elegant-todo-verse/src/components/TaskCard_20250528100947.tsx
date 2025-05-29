@@ -116,7 +116,7 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask, onAddComment, onDel
         {showComments && (
           <div className="space-y-3 border-t border-gray-700/50 pt-3">
             {task.comentarios.map((comment) => (
-              <div key={comment._id} className="bg-gray-800/50 p-3 rounded-lg border border-gray-700/30">
+              <div key={comment.id} className="bg-gray-800/50 p-3 rounded-lg border border-gray-700/30">
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
                     <User className="w-3 h-3 text-gray-400" />
@@ -126,7 +126,7 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask, onAddComment, onDel
                     </span>
                   </div>
                   <Button 
-                    onClick={() => onDeleteComment(task._id, comment._id)}
+                    onClick={() => onDeleteComment(task._id, comment.id)}
                     variant="ghost" 
                     size="sm"
                     className="text-red-400 hover:text-red-300 p-1 h-auto"

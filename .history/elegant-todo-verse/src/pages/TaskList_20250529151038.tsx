@@ -153,7 +153,7 @@ const TaskList = () => {
       task._id === taskId 
         ? { 
             ...task, 
-            comentarios: task.comentarios.filter(comment => comment._id !== commentId) 
+            comentarios: task.comentarios.filter(comment => comment.id !== commentId) 
           }
         : task
     ));

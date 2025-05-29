@@ -126,7 +126,7 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask, onAddComment, onDel
                     </span>
                   </div>
                   <Button 
-                    onClick={() => onDeleteComment(task._id, comment._id)}
+                    onClick={() => onDeleteComment(task._id, comment.id)}
                     variant="ghost" 
                     size="sm"
                     className="text-red-400 hover:text-red-300 p-1 h-auto"

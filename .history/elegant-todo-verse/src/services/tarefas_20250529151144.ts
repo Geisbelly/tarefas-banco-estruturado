@@ -45,11 +45,7 @@ const postTaskCommentario = async (newComment: Comment) => {
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({
-            taskId: newComment._id,
-            autor: newComment.autor,
-            texto: newComment.texto,
-          })
+          body: JSON.stringify({})
         });
         if (!res.ok) {
           const text = await res.text();

@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { getTask,postTask, atualizarTarefa, deletarTarefa, postTaskCommentario } from "../services/tarefas";
-import { log } from "console";
 
 const TaskList = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -126,12 +125,11 @@ const TaskList = () => {
 
   const addComment = (taskId: string, autor: string, texto: string) => {
     const newComment = {
-      _id: taskId,
+      id: taskId,
       autor,
       texto,
       dataComentario: new Date()
     };
-    console.log("Adicionando comentário:", newComment);
 
     postTaskCommentario(newComment).then(() => {
       setTasks(tasks.map(task =>
@@ -153,7 +151,7 @@ const TaskList = () => {
       task._id === taskId 
         ? { 
             ...task, 
-            comentarios: task.comentarios.filter(comment => comment._id !== commentId) 
+            comentarios: task.comentarios.filter(comment => comment.id !== commentId) 
           }
         : task
     ));
