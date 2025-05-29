@@ -3,7 +3,7 @@ import {Task} from '../types/task';
 
 const getTask = async () => {
       try {
-        const res = await fetch("https://tarefas-banco-estruturado.onrender.com/tarefas");
+        const res = await fetch("api/tarefas");
         if (!res.ok) {
           const text = await res.text();
           throw new Error(`Erro ${res.status}: ${text}`);
@@ -19,7 +19,7 @@ const getTask = async () => {
 };
 const postTask = async (newTask:Task) => {
       try {
-        const res = await fetch("https://tarefas-banco-estruturado.onrender.com/tarefas", {
+        const res = await fetch("api/tarefas", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -40,7 +40,7 @@ const postTask = async (newTask:Task) => {
 };
 const postUser = async (datas:{email:string, senha: string, nome: string}) => {
       try {
-        const res = await fetch("https://tarefas-banco-estruturado.onrender.com/cadastre", {
+        const res = await fetch("api/cadastre", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -62,7 +62,7 @@ const postUser = async (datas:{email:string, senha: string, nome: string}) => {
 
 const atualizarTarefa = async (id, dadosAtualizados) => {
   try {
-    const response = await fetch(`https://tarefas-banco-estruturado.onrender.com/tarefas/${id}`, {
+    const response = await fetch(`api/tarefas/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -83,7 +83,7 @@ const atualizarTarefa = async (id, dadosAtualizados) => {
 };
 const deletarTarefa = async (id) => {
   try {
-    const response = await fetch(`https://tarefas-banco-estruturado.onrender.com/tarefas/${id}`, {
+    const response = await fetch(`api/tarefas/${id}`, {
       method: 'DELETE'
     });
 
