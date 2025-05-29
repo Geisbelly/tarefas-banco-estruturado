@@ -1,5 +1,5 @@
 import { MongoClient, ObjectId, Collection } from 'mongodb';
-const URL=process.env.URL;
+const URL=
 const client = new MongoClient(URL);
 
 

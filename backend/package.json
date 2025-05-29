@@ -6,6 +6,7 @@
     "start": "node src/index.js"
   },
   "dependencies": {
+    "backend": "file:",
     "bcrypt": "^6.0.0",
     "concurrently": "^9.1.2",
     "cors": "^2.8.5",

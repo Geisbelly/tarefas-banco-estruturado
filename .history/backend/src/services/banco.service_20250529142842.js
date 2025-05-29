@@ -1,5 +1,5 @@
 import { MongoClient, ObjectId, Collection } from 'mongodb';
-const URL=process.env.URL;
+const URL=const PORT = process.env.PORT || 3000;
 const client = new MongoClient(URL);
 
 
