@@ -1,4 +1,3 @@
-import { usuarios } from '../models/usuario.model.js';
 import { 
     buscarTodasTarefas,
     adicionarComentario,
@@ -15,7 +14,7 @@ import {
 
 export const listarTarefas = async (req, res) => {
   try {
-    const tarefas = await buscarTarefasPorUsuario(usuario);
+    const tarefas = await buscarTarefasPorUsuario();
     res.json(tarefas);
   } catch (error) {
     console.error('Erro ao listar tarefas:', error);

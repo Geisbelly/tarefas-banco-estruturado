@@ -130,7 +130,7 @@ export async function buscarTarefasPorUsuario(usuario) {
     const tarefas = await tarefasCollection.find({
       $or: [
         { criador: usuario },
-        { colaboradores: usuario } 
+        { colaboradores: usuario } // verifica se o usuário está no array de colaboradores
       ]
     }).toArray();
 

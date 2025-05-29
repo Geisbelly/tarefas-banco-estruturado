@@ -15,7 +15,7 @@ import {
 
 export const listarTarefas = async (req, res) => {
   try {
-    const tarefas = await buscarTarefasPorUsuario(usuario);
+    const tarefas = await buscarTarefasPorUsuario(usuarios);
     res.json(tarefas);
   } catch (error) {
     console.error('Erro ao listar tarefas:', error);
