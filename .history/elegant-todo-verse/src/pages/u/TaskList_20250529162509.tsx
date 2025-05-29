@@ -16,135 +16,166 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { getTask,postTask, atualizarTarefa, deletarTarefa, postTaskCommentario, deleteTaskCommentario } from "../../services/tarefas";
+import { log } from "console";
 
-const Dashboard = () => {
+const TaskList = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const 
   const [filters, setFilters] = useState<TaskFilters>({
     status: "",
+    criador: "",
+    colaboradores: [],
     tags: "",
     titulo: "",
     dataInicio: "",
-    dataFim: "",
-    criador: "",
-    colaboradores: []
+    dataFim: ""
   });
   const [showTaskModal, setShowTaskModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  // Dados simulados iniciais
+ const openTaskDetails = (task: Task) => {
+    setSelectedTask(task);
+    setShowTaskModal(true);
+  };
+
+  const closeTaskDetails = () => {
+    setSelectedTask(null);
+    setShowTaskModal(false);
+  };
+
+
   useEffect(() => {
-    const initialTasks: Task[] = [
-      {
-        _id: "1",
-        titulo: "Estudar para as provas",
-        descricao: "Revisar materias e projetos pra se preparar para o inicio das provas.",
-        dataCriacao: new Date("2024-05-20"),
-        status: "em andamento",
-        tags: ["provas", "universidade", "materias"],
-        comentarios: [
-          {
-            _id: "c1",
-            autor: "Professor",
-            texto: "O ultimo conteudo passado na sala tambem estará na prova!",
-            dataComentario: new Date("2024-05-21")
-          }
-        ],
-        criador: "",
-        colaboradores: []
-      },
-      {
-        _id: "2",
-        titulo: "Fazer compras",
-        descricao: "Organizar uma ida ao mercado para fazer compras.",
-        dataCriacao: new Date("2024-05-19"),
-        status: "concluida",
-        tags: ["compras", "rotina"],
-        comentarios: [],
-        criador: "",
-        colaboradores: []
-      },
-      {
-        _id: "3",
-        titulo: "Desenvolver projeto web",
-        descricao: "Criar interface moderna para sistema de tarefas com React e TypeScript.",
-        dataCriacao: new Date("2024-05-22"),
-        status: "pendente",
-        tags: ["desenvolvimento", "react", "typescript"],
-        comentarios: [],
-        criador: "",
-        colaboradores: []
+    const fetchTasks = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        const res = await getTask(user.email);
+        s
+        console.log("Dados recebidos:", res);
+        setTasks(res.sort((a: Task, b: Task) => new Date(b.dataCriacao).getTime() - new Date(a.dataCriacao).getTime()));
+      } catch (err) {
+        console.error("Erro ao buscar tarefas:", err);
       }
-    ];
-    setTasks(initialTasks);
+    };
+
+    fetchTasks();
+    
   }, []);
 
+  useEffect(() => {
+  fetch('/api/usuarios')
+    .then(res => res.json())
+    .then(data => console.log(data))
+    .catch(err => console.error(err));
+}, []);
+
+
   const createTask = (taskData: Omit<Task, '_id' | 'dataCriacao' | 'comentarios'>) => {
+     const user = JSON.parse(localStorage.getItem('user'));
+    
     const newTask: Task = {
       ...taskData,
-      _id: Date.now().toString(),
       dataCriacao: new Date(),
-      comentarios: []
+      comentarios: [],
+      _id: "",
+      criador: user.email,
+
     };
-    setTasks([newTask, ...tasks]);
-    setShowTaskModal(false);
-    toast({
+     postTask(newTask).then((e) => {
+      const novaTarefa = {_id: e, ...newTask}
+      console.log("Tarefa criada com sucesso:", novaTarefa);
+      setTasks((prev)=>[novaTarefa, ...prev]);
+       toast({
       title: "Tarefa criada!",
       description: `"${taskData.titulo}" foi adicionada com sucesso.`,
     });
+    }).catch(err => {
+      console.error("Erro ao criar tarefa:", err);
+    });
+    
+    setShowTaskModal(false);
+   
   };
 
   const updateTask = (id: string, updates: Partial<Task>) => {
-    setTasks(tasks.map(task => 
+    closeTaskDetails();
+    atualizarTarefa(id, updates).then((e) => {
+      setTasks(tasks.map(task => 
       task._id === id ? { ...task, ...updates } : task
-    ));
-    toast({
-      title: "Tarefa atualizada!",
-      description: "As alterações foram salvas.",
+      ));
+      toast({
+        title: "Tarefa atualizada!",
+        description: "As alterações foram salvas.",
+      });
+      
+    }).catch(err => {
+      console.error("Erro ao atualizar tarefa:", err);
     });
+    
   };
 
   const deleteTask = (id: string) => {
-    const task = tasks.find(t => t._id === id);
-    setTasks(tasks.filter(task => task._id !== id));
-    toast({
-      title: "Tarefa removida!",
-      description: `"${task?.titulo}" foi excluída.`,
+    deletarTarefa(id).then(() => {
+      console.log("Tarefa excluída com sucesso:", id);
+      const task = tasks.find(t => t._id === id);
+      setTasks(tasks.filter(task => task._id !== id));
+       toast({
+        title: "Tarefa removida!",
+        description: `"${task?.titulo}" foi excluída.`,
+      });
+    }).catch(err => {
+      console.error("Erro ao excluir tarefa:", err);
     });
+   
+    
+   
   };
 
   const addComment = (taskId: string, autor: string, texto: string) => {
     const newComment = {
-      _id: Date.now().toString(),
+      _id: taskId,
       autor,
       texto,
       dataComentario: new Date()
     };
-    
-    setTasks(tasks.map(task => 
-      task._id === taskId 
-        ? { ...task, comentarios: [...task.comentarios, newComment] }
-        : task
-    ));
-    
-    toast({
-      title: "Comentário adicionado!",
-      description: "Seu comentário foi salvo.",
+    console.log("Adicionando comentário:", newComment);
+
+    postTaskCommentario(newComment).then(() => {
+      setTasks(tasks.map(task =>
+        task._id === taskId
+          ? { ...task, comentarios: [...task.comentarios, newComment] }
+          : task
+      ));
+      toast({
+        title: "Comentário adicionado!",
+        description: `"${texto}" foi adicionado com sucesso.`,
+      });
+    }).catch(err => {
+      console.error("Erro ao criar comentário:", err);
     });
   };
 
-  const deleteComment = (taskId: string, commentId: string) => {
-    setTasks(tasks.map(task => 
+  const deleteComment = (taskId: string, comentarioId: string) => {
+    console.log("Excluindo comentário:", comentarioId, "da tarefa:", taskId);
+    deleteTaskCommentario(taskId, comentarioId).then(() => {
+      console.log("Comentário excluído com sucesso:", comentarioId);
+      setTasks(tasks.map(task => 
       task._id === taskId 
-        ? { 
-            ...task, 
-            comentarios: task.comentarios.filter(comment => comment._id !== commentId) 
-          }
-        : task
-    ));
-    
-    toast({
-      title: "Comentário removido!",
-      description: "O comentário foi excluído.",
-    });
+          ? { 
+              ...task, 
+              comentarios: task.comentarios.filter(comment => comment._id !== comentarioId) 
+            }
+          : task
+      ));
+      toast({
+        title: "Comentário removido!",
+        description: "O comentário foi excluído.",
+      });
+    }
+    ).catch(err => {
+      console.error("Erro ao excluir comentário:", err);
+    }
+    );
   };
 
   const filteredTasks = tasks.filter(task => {
@@ -182,7 +213,7 @@ const Dashboard = () => {
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-white mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-          Sistema de Tarefas
+          Gerenciamento de Tarefas
         </h1>
         <p className="text-gray-300 text-lg">Gerencie suas tarefas de forma eficiente e organizada</p>
         
@@ -209,23 +240,24 @@ const Dashboard = () => {
         </div>
       </div>
 
+
       {/* Task Creation Button and Modal */}
       <div className="mb-8">
-        <Dialog open={showTaskModal} onOpenChange={setShowTaskModal}>
-          <DialogTrigger asChild>
+        <Dialog open={showTaskModal}  onOpenChange={(open) => {setShowTaskModal(open);if (!open) {closeTaskDetails();}}}>
+          <DialogTrigger asChild >
             <Button className="w-full bg-blue-600 hover:bg-blue-700">
               <Plus className="mr-2 h-5 w-5" />
-              Nova Tarefa
+              Criar Nova Tarefa
             </Button>
           </DialogTrigger>
           <DialogContent className="bg-gray-900 border-gray-700 text-white">
             <DialogHeader>
-              <DialogTitle className="text-xl text-white">Criar Nova Tarefa</DialogTitle>
+              <DialogTitle className="text-xl text-white">{selectedTask ? 'Editar Tarefa' : 'Criar Nova Tarefa'}</DialogTitle>
               <DialogDescription className="text-gray-400">
                 Preencha os detalhes para criar uma nova tarefa
               </DialogDescription>
             </DialogHeader>
-            <TaskForm onCreateTask={createTask} />
+            <TaskForm onCreateTask={createTask} task={selectedTask} onUpdateTask={updateTask} />
           </DialogContent>
         </Dialog>
       </div>
@@ -251,6 +283,7 @@ const Dashboard = () => {
           </div>
         ) : (
           filteredTasks.map(task => (
+            
             <TaskCard
               key={task._id}
               task={task}
@@ -258,15 +291,14 @@ const Dashboard = () => {
               onDeleteTask={deleteTask}
               onAddComment={addComment}
               onDeleteComment={deleteComment}
-              onClick={function (task: Task): void {
-                throw new Error("Function not implemented.");
-              }}
+              onClick={() => openTaskDetails(task)} // <-- aqui
             />
           ))
         )}
       </div>
+      
     </div>
   );
 };
 
-export default Dashboard;
+export default TaskList;

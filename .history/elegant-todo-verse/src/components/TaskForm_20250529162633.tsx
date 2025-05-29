@@ -18,6 +18,7 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask, criador }: Tas
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [status, setStatus] = useState<Task['status']>("pendente");
+  const [criador, setCriador] = useState("");
   const [colaboradores, setColaboradores] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");

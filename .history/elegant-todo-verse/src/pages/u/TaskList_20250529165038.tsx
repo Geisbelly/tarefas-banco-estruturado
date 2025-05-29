@@ -68,7 +68,7 @@ const TaskList = () => {
 
   const createTask = (taskData: Omit<Task, '_id' | 'dataCriacao' | 'comentarios'>) => {
      const user = JSON.parse(localStorage.getItem('user'));
-     
+     login("Usuário logado:", user);
     
     const newTask: Task = {
       ...taskData,
@@ -77,8 +77,6 @@ const TaskList = () => {
       _id: "",
 
     };
-
-    console.log("Criando nova tarefa:", newTask);
      postTask(newTask).then((e) => {
       const novaTarefa = {_id: e, ...newTask}
       console.log("Tarefa criada com sucesso:", novaTarefa);

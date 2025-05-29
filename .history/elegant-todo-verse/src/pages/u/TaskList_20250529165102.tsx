@@ -78,7 +78,7 @@ const TaskList = () => {
 
     };
 
-    console.log("Criando nova tarefa:", newTask);
+    console.log
      postTask(newTask).then((e) => {
       const novaTarefa = {_id: e, ...newTask}
       console.log("Tarefa criada com sucesso:", novaTarefa);

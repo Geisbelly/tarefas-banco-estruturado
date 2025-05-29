@@ -53,7 +53,7 @@ const Navigation = () => {
     });
     
     if (location.pathname === '/auth') {
-      navigate('/dashboard');
+      navigate('/u/dashboard');
     }
   };
 

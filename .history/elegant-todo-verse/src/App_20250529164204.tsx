@@ -28,7 +28,7 @@ const App = () => (
             {/* ROTAS PROTEGIDAS */}
             <Route element={<PrivateRoute />}>
               <Route path="/u/dashboard" element={<Statistics />} />
-              <Route path="/u/tasks" element={<TaskList />} />
+              <Route path="/tasks" element={<TaskList />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

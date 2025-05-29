@@ -29,8 +29,8 @@ const Navigation = () => {
       
       // Redirecionar para login se não estiver autenticado e tentar acessar páginas protegidas
       if (!fakeAuthStatus && 
-         (location.pathname === '/u/dashboard' || 
-          location.pathname === '/u/tasks')) {
+         (location.pathname === '/dashboard' || 
+          location.pathname === '/tasks')) {
         navigate('/auth');
       }
     };
@@ -53,7 +53,7 @@ const Navigation = () => {
     });
     
     if (location.pathname === '/auth') {
-      navigate('/dashboard');
+      navigate('/u/dashboard');
     }
   };
 
@@ -108,7 +108,7 @@ const Navigation = () => {
               {isLoggedIn && (
                 <>
                   <NavigationMenuItem>
-                    <Link to="/u/dashboard" className={cn(
+                    <Link to="/dashboard" className={cn(
                       navigationMenuTriggerStyle(),
                       location.pathname === "/u/dashboard" ? "bg-gray-700 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-100"
                     )}>
@@ -116,9 +116,9 @@ const Navigation = () => {
                       Dashboard
                     </Link>
                   </NavigationMenuItem>
-
+                  
                   <NavigationMenuItem>
-                    <Link to="/u/tasks" className={cn(
+                    <Link to="/tasks" className={cn(
                       navigationMenuTriggerStyle(),
                       location.pathname === "/u/tasks" ? "bg-gray-700 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-100"
                     )}>

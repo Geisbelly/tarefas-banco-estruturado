@@ -53,7 +53,7 @@ const Navigation = () => {
     });
     
     if (location.pathname === '/auth') {
-      navigate('/dashboard');
+      navigate('/u/dashboard');
     }
   };
 
@@ -116,9 +116,9 @@ const Navigation = () => {
                       Dashboard
                     </Link>
                   </NavigationMenuItem>
-
+                  
                   <NavigationMenuItem>
-                    <Link to="/u/tasks" className={cn(
+                    <Link to="/tasks" className={cn(
                       navigationMenuTriggerStyle(),
                       location.pathname === "/u/tasks" ? "bg-gray-700 text-white" : "bg-gray-800 hover:bg-gray-700 text-gray-100"
                     )}>

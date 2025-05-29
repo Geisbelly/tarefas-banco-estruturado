@@ -11,13 +11,13 @@ interface TaskFormProps {
   onCreateTask: (task: Omit<Task, '_id' | 'dataCriacao' | 'comentarios'>) => void;
   task?: Task; // Optional prop for editing existing tasks
   onUpdateTask?: (id,task: Task) => void; // Optional prop for updating existing tasks
-  criador?: string; // Optional prop for the creator's email
 }
 
-export const TaskForm = ({ onCreateTask, task=null, onUpdateTask, criador }: TaskFormProps) => {
+export const TaskForm = ({ onCreateTask, task=null, onUpdateTask, cri }: TaskFormProps) => {
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [status, setStatus] = useState<Task['status']>("pendente");
+  const [criador, setCriador] = useState("");
   const [colaboradores, setColaboradores] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");

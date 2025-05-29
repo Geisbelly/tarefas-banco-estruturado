@@ -18,11 +18,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { getTask,postTask, atualizarTarefa, deletarTarefa, postTaskCommentario, deleteTaskCommentario } from "../../services/tarefas";
 import { log } from "console";
-import { set } from "date-fns";
 
 const TaskList = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [criador, setCriador] = useState<string>("");
   const [filters, setFilters] = useState<TaskFilters>({
     status: "",
     criador: "",
@@ -49,10 +47,8 @@ const TaskList = () => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const user = JSON.parse(localStorage.getItem('user'));
-        const res = await getTask(user.email);
-        setCriador(user.email);
-        console.log("Usuário logado:", user);
+        localStorage.
+        const res = await getTask("geisbelly");
         console.log("Dados recebidos:", res);
         setTasks(res.sort((a: Task, b: Task) => new Date(b.dataCriacao).getTime() - new Date(a.dataCriacao).getTime()));
       } catch (err) {
@@ -64,21 +60,21 @@ const TaskList = () => {
     
   }, []);
 
+  useEffect(() => {
+  fetch('/api/usuarios')
+    .then(res => res.json())
+    .then(data => console.log(data))
+    .catch(err => console.error(err));
+}, []);
 
 
   const createTask = (taskData: Omit<Task, '_id' | 'dataCriacao' | 'comentarios'>) => {
-     const user = JSON.parse(localStorage.getItem('user'));
-     
-    
     const newTask: Task = {
       ...taskData,
       dataCriacao: new Date(),
       comentarios: [],
-      _id: "",
-
+      _id: ""
     };
-
-    console.log("Criando nova tarefa:", newTask);
      postTask(newTask).then((e) => {
       const novaTarefa = {_id: e, ...newTask}
       console.log("Tarefa criada com sucesso:", novaTarefa);
@@ -255,7 +251,7 @@ const TaskList = () => {
                 Preencha os detalhes para criar uma nova tarefa
               </DialogDescription>
             </DialogHeader>
-            <TaskForm onCreateTask={createTask} task={selectedTask} onUpdateTask={updateTask} criador={criador}/>
+            <TaskForm onCreateTask={createTask} task={selectedTask} onUpdateTask={updateTask} />
           </DialogContent>
         </Dialog>
       </div>
