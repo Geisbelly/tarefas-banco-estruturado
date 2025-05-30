@@ -4,15 +4,26 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
+
+
+// vite.config.js
+
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
-    port: 8080,
+    ...(mode === 'development' && {
+      proxy: {
+        '/api': {
+          target: 'https://tarefas-banco-estruturado.onrender.com', // Backend URL
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+      },
+    }),
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
+    mode === 'development' && componentTagger(),
+
   ].filter(Boolean),
   resolve: {
     alias: {
