@@ -4,11 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "build:dev": "vite build --mode development",
-    "dev": "vite",
-    "lint": "eslint .",
+    "build": "vite build", 
+    "dev": "vite", 
     "preview": "vite preview",
+    "lint": "eslint .",
     "dev:server": "node backend/server.ts"
   },
   "dependencies": {
