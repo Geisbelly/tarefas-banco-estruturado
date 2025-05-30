@@ -3,22 +3,21 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-// https://vitejs.dev/config/
+// vite.config.js
+
 export default defineConfig(({ mode }) => ({
   server: {
-    proxy: {
+    proxy: mode === 'development' && {
       '/api': {
-        target: 'https://tarefas-banco-estruturado.onrender.com',
+        target: 'https://tarefas-banco-estruturado.onrender.com', // Backend URL
         changeOrigin: true,
-        rewrite: path => path.replace(/^\/api/, '')
-      }
+        rewrite: path => path.replace(/^\/api/, ''),
+      },
     },
-
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
+    mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
