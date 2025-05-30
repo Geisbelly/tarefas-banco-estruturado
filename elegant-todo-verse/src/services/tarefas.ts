@@ -5,7 +5,7 @@ import {Task, Comment} from '../types/task';
 const getTask = async (usuario:string) => {
       try {
         console.log("Buscando tarefas para o usuário:", usuario);
-        const res = await fetch("api/tarefas/u", {
+        const res = await fetch("https://tarefas-banco-estruturado.onrender.com/tarefas/u", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -27,7 +27,7 @@ const getTask = async (usuario:string) => {
 };
 const login = async (email: string, senha: string) => {
       try {
-        const res = await fetch("api/auth", {
+        const res = await fetch("https://tarefas-banco-estruturado.onrender.com/auth", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -49,7 +49,7 @@ const login = async (email: string, senha: string) => {
 const postTask = async (newTask:Task) => {
       try {
         console.log("Criando nova tarefa ((((((((((((())))))))))))):", newTask);
-        const res = await fetch("api/tarefas", {
+        const res = await fetch("https://tarefas-banco-estruturado.onrender.com/tarefas", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -71,7 +71,7 @@ const postTask = async (newTask:Task) => {
 };
 const postTaskCommentario = async (newComment: Comment) => {
       try {
-        const res = await fetch("api/tarefas/comentario", {
+        const res = await fetch("https://tarefas-banco-estruturado.onrender.com/tarefas/comentario", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -97,7 +97,7 @@ const postTaskCommentario = async (newComment: Comment) => {
 const deleteTaskCommentario = async (taskId: string, comentarioId: string) => {
       try {
         console.log("Deletando comentário:", { taskId, comentarioId });
-        const res = await fetch("api/tarefas/comentario/delete", {
+        const res = await fetch("https://tarefas-banco-estruturado.onrender.com/tarefas/comentario/delete", {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json"
@@ -122,7 +122,7 @@ const deleteTaskCommentario = async (taskId: string, comentarioId: string) => {
        
 const postUser = async (datas:{email:string, senha: string, nome: string}) => {
       try {
-        const res = await fetch("api/cadastre", {
+        const res = await fetch("https://tarefas-banco-estruturado.onrender.com/cadastre", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -145,7 +145,7 @@ const postUser = async (datas:{email:string, senha: string, nome: string}) => {
 const atualizarTarefa = async (id, dadosAtualizados) => {
   try {
     console.log("Atualizando tarefa:", id, dadosAtualizados);
-    const response = await fetch(`api/tarefas/${id}`, {
+    const response = await fetch(`https://tarefas-banco-estruturado.onrender.com/tarefas/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -166,7 +166,7 @@ const atualizarTarefa = async (id, dadosAtualizados) => {
 };
 const deletarTarefa = async (id) => {
   try {
-    const response = await fetch(`api/tarefas/${id}`, {
+    const response = await fetch(`https://tarefas-banco-estruturado.onrender.com/tarefas/${id}`, {
       method: 'DELETE'
     });
 
