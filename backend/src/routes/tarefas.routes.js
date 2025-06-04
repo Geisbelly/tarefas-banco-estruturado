@@ -14,8 +14,8 @@ router.delete('/comentario/delete', deletarComentarioTask);
 
 
 router.get("/status/contador", verContadoresPorStatus);
-router.get("/tarefas/tags", obterTagsMaisUsadas);
-router.get("/tarefas/concluidas", obterTarefasConcluidasPorPeriodo);
-router.get("/tarefas/produtividade", obterProdutividade);
+router.get("/tags", obterTagsMaisUsadas);
+router.get("/concluidas", obterTarefasConcluidasPorPeriodo);
+router.get("/produtividade", obterProdutividade);
 
 export default router;
