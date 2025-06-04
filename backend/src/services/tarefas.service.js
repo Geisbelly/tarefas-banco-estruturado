@@ -1,5 +1,5 @@
 // tarefaService.ts
-
+import redis from "./redis.service.js";
 import {ObjectId } from 'mongodb';
 import { connectToMongoDB, closeMongoDBConnection } from './banco.service.js'; // adapta pro teu caminho
 
@@ -70,6 +70,8 @@ export async function criarTarefa(
     };
     const result = await tarefasCollection.insertOne(novaTarefa);
     console.log("Tarefa criada com sucesso:", result.insertedId);
+    console.log("Atualizando contador de status no Redis para o criador:", criador, "com status:", status || 'pendente');
+    await atualizarContadorStatus(criador, status || 'pendente', 1);
     return result.insertedId;
   } catch (err) {
     console.error("Erro ao criar tarefa:", err);
@@ -198,33 +200,27 @@ export async function atualizarTarefa(id, updates) {
   try {
     tarefasCollection = await connectToMongoDB(dbName, collectionName);
 
-    if (!ObjectId.isValid(id)) {
-      console.error("ID inválido para atualização:", id);
-      return false;
-    }
+    if (!ObjectId.isValid(id)) return false;
 
+    const tarefaAtual = await tarefasCollection.findOne({ _id: new ObjectId(id) });
+    if (!tarefaAtual) return false;
 
     const dadosFiltrados = Object.fromEntries(
       Object.entries(updates).filter(([chave]) => chave !== "_id" && chave !== "id")
     );
-
 
     const result = await tarefasCollection.updateOne(
       { _id: new ObjectId(id) },
       { $set: dadosFiltrados }
     );
 
-    if (result.matchedCount === 0) {
-      console.log(`Nenhuma tarefa encontrada com o ID ${id} para atualização.`);
-      return false;
-    } else if (result.modifiedCount > 0) {
-      console.log(`Tarefa com ID ${id} atualizada com sucesso!`);
-      return true;
-    } else {
-      console.log(`Nenhuma alteração foi feita na tarefa com ID ${id}.`);
-      return false;
+    // Atualiza contadores no Redis se status mudou
+    if (updates.status && updates.status !== tarefaAtual.status) {
+      await atualizarContadorStatus(tarefaAtual.criador, tarefaAtual.status, -1);
+      await atualizarContadorStatus(tarefaAtual.criador, updates.status, 1);
     }
 
+    return result.modifiedCount > 0;
   } catch (err) {
     console.error(`Erro ao atualizar tarefa com ID ${id}:`, err);
     return false;
@@ -232,6 +228,7 @@ export async function atualizarTarefa(id, updates) {
     if (tarefasCollection) await closeMongoDBConnection();
   }
 }
+
 
 export async function adicionarComentario(tarefaId, autor, texto) {
   let tarefasCollection;
@@ -310,14 +307,18 @@ export async function deletarTarefa(id) {
       console.error("ID inválido para exclusão:", id);
       return false;
     }
+    const tarefa = await tarefasCollection.findOne({ _id: new ObjectId(id) });
+    if (!tarefa) return false;
+
     const result = await tarefasCollection.deleteOne({ _id: new ObjectId(id) });
     if (result.deletedCount === 0) {
       console.log(`Nenhuma tarefa encontrada com o ID ${id} para exclusão.`);
       return false;
-    } else {
+    } 
+      await atualizarContadorStatus(tarefa.criador, tarefa.status, -1);
       console.log(`Tarefa com ID ${id} excluída com sucesso!`);
       return true;
-    }
+
   } catch (err) {
     console.error(`Erro ao deletar tarefa com ID ${id}:`, err);
     return false;
@@ -325,3 +326,35 @@ export async function deletarTarefa(id) {
     if (tarefasCollection) await closeMongoDBConnection();
   }
 }
+
+async function atualizarContadorStatus(userId, status, incremento = 1) {
+  const chave = `user:${userId}:tasks:status:${status}`;
+
+  console.log(`Atualizando contador Redis: chave=${chave}, incremento=${incremento}`);
+
+  try {
+    const resultado = await redis.incrBy(chave, incremento);
+    console.log(`Novo valor para ${chave}: ${resultado}`);
+  } catch (error) {
+    console.error(`Erro ao atualizar contador Redis para ${chave}:`, error);
+  }
+}
+
+async function obterContadoresStatus(userId) {
+  const statusList = ["pendente", "em andamento", "concluída"];
+  const resultados = {};
+
+  for (const status of statusList) {
+    const chave = `user:${userId}:tasks:status:${status}`;
+    const valor = await redis.get(chave);
+    resultados[status] = parseInt(valor) || 0;
+  }
+
+  return resultados;
+}
+
+export {
+  obterContadoresStatus,
+  atualizarContadorStatus
+};
+

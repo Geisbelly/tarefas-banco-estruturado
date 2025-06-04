@@ -71,7 +71,20 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask, criador }: Tas
           comentarios: task.comentarios || [],
           dataConclusao: (status === "concluida" && status !== statusAntes) ? new Date() : null
         });
+      }else{
+        onUpdateTask(task._id, {
+          _id: task._id,
+          titulo: titulo.trim(),
+          descricao: descricao.trim(),
+          status,
+          criador: criador || task.criador,
+          colaboradores,
+          tags,
+          dataCriacao: task.dataCriacao,
+          comentarios: task.comentarios || [],
+        });
       }
+
       resetForm();
       return;
     }
