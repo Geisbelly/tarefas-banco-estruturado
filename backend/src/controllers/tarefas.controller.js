@@ -6,7 +6,10 @@ import {
     deletarComentario,
     buscarTarefasPorUsuario,
     obterContadoresStatus,
-    atualizarContadorStatus
+    atualizarContadorStatus,
+    getTagsMaisUsadas,
+    getTarefasConcluidasPorPeriodo,
+    getProdutividade
  } from '../services/tarefas.service.js';
 
 export const listarTarefas = async (req, res) => {
@@ -130,3 +133,53 @@ export async function verContadoresPorStatus(req, res) {
   }
 }
 
+// /tarefas/tags?userId=...
+export async function obterTagsMaisUsadas(req, res) {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: "Parâmetro userId é obrigatório." });
+
+    const tags = await getTagsMaisUsadas(userId);
+    res.status(200).json(tags);
+  } catch (err) {
+    console.error("Erro ao obter tags:", err);
+    res.status(500).json({ error: "Erro ao obter tags." });
+  }
+}
+
+// /tarefas/concluidas?userId=...&de=2025-06-01&ate=2025-06-07
+export async function obterTarefasConcluidasPorPeriodo(req, res) {
+  try {
+    const { userId, de, ate } = req.query;
+    if (!userId || !de || !ate) return res.status(400).json({ error: "Parâmetros userId, de e ate são obrigatórios." });
+
+    const dataInicio = new Date(de);
+    const dataFim = new Date(ate);
+    if (isNaN(dataInicio) || isNaN(dataFim)) return res.status(400).json({ error: "Datas inválidas." });
+
+    const dias = [];
+    for (let d = new Date(dataInicio); d <= dataFim; d.setDate(d.getDate() + 1)) {
+      dias.push(d.toISOString().split("T")[0]);
+    }
+
+    const resultados = await getTarefasConcluidasPorPeriodo(userId, dias);
+    res.status(200).json(resultados);
+  } catch (err) {
+    console.error("Erro ao obter tarefas por período:", err);
+    res.status(500).json({ error: "Erro interno." });
+  }
+}
+
+// /tarefas/produtividade?userId=...
+export async function obterProdutividade(req, res) {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: "Parâmetro userId é obrigatório." });
+
+    const dados = await getProdutividade(userId);
+    res.status(200).json(dados);
+  } catch (err) {
+    console.error("Erro ao obter produtividade:", err);
+    res.status(500).json({ error: "Erro ao obter produtividade." });
+  }
+}

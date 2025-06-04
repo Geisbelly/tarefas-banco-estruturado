@@ -454,3 +454,35 @@ export async function reverterConclusaoTarefa(userId, dataConclusao, tempoConclu
   }
 }
 
+// TAGS MAIS USADAS (TOP 10)
+export async function getTagsMaisUsadas(userId) {
+  const chave = `user:${userId}:tags:top`;
+  return await redis.zRevRangeWithScores(chave, 0, 9);
+}
+
+// TAREFAS CONCLUÍDAS POR DIA (intervalo de datas)
+export async function getTarefasConcluidasPorPeriodo(userId, dias) {
+  const resultado = {};
+  for (const dia of dias) {
+    const chave = `user:${userId}:tasks:completed:${dia}`;
+    const valor = await redis.get(chave);
+    resultado[dia] = parseInt(valor) || 0;
+  }
+  return resultado;
+}
+
+// ESTATÍSTICAS DE PRODUTIVIDADE
+export async function getProdutividade(userId) {
+  const base = `user:${userId}:stats:productivity`;
+  const stats = await redis.hGetAll(base);
+  const soma = await redis.get(`${base}:soma_tempo_conclusao`);
+  const qtd = await redis.get(`${base}:qtd_concluidas`);
+
+  const tempoMedio = qtd > 0 ? Math.floor(soma / qtd) : 0;
+
+  return {
+    ...stats,
+    tempo_medio_conclusao_ms: tempoMedio,
+    total_concluidas: parseInt(qtd) || 0,
+  };
+}
