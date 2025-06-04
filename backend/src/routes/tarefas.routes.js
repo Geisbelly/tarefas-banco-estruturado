@@ -11,9 +11,11 @@ router.put('/:id', updateTask);
 router.delete('/:id', deleteTask);
 router.delete('/comentario/delete', deletarComentarioTask);
 
-export default router;
+
 
 router.get("/status/contador", verContadoresPorStatus);
 router.get("/tarefas/tags", obterTagsMaisUsadas);
 router.get("/tarefas/concluidas", obterTarefasConcluidasPorPeriodo);
 router.get("/tarefas/produtividade", obterProdutividade);
+
+export default router;
