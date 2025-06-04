@@ -19,20 +19,50 @@ export const listarTarefas = async (req, res) => {
   }
 };
 
+//antigo
+// export const criarTask = async (req, res) => {
+//   try {
+//     const body = req.body;
+//     const novaTarefa = await criarTarefa(body.titulo, body.descricao, body.criador, body.colaboradores, body.status, body.tags, body.dataCriacao, body.dataConclusao, body.comentarios);
+//     res.status(201).json(novaTarefa);
+//     console.log("Criou aqui de boa")
+//     await atualizarContadorStatus(criador, novaTarefa.status, 1);
+//     console.log("Contador atualizado com sucesso")
+//   } catch (error) {
+//     console.error('Erro ao criar tarefa:', error);
+//     res.status(500).json({ error: 'Erro interno ao criar tarefa' });
+//   }
+// };
+
 export const criarTask = async (req, res) => {
   try {
     const body = req.body;
-    const novaTarefa = await criarTarefa(body.titulo, body.descricao, body.criador, body.colaboradores, body.status, body.tags, body.dataCriacao, body.dataConclusao, body.comentarios);
+    const novaTarefa = await criarTarefa(
+      body.titulo,
+      body.descricao,
+      body.criador,
+      body.colaboradores,
+      body.status,
+      body.tags,
+      body.dataCriacao,
+      body.dataConclusao,
+      body.comentarios
+    );
+
+    console.log("Criou aqui de boa");
+
+    // Corrigido: aguarda atualizar contador antes de responder
+    await atualizarContadorStatus(body.criador, novaTarefa.status, 1);
+    console.log("Contador atualizado com sucesso");
+
     res.status(201).json(novaTarefa);
-    console.log("Criou aqui de boa")
-    await atualizarContadorStatus(criador, novaTarefa.status, 1);
-    console.log("Contador atualizado com sucesso")
   } catch (error) {
     console.error('Erro ao criar tarefa:', error);
-    res.status(500).json({ error: 'Erro interno ao criar tarefa' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Erro interno ao criar tarefa' });
+    }
   }
 };
-
 
 export const criarTaskComentario = async (req, res) => {
   try {
