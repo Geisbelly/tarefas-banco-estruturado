@@ -194,6 +194,7 @@ export async function buscarTarefasPorTags(tags) {
 
 export async function atualizarTarefa(id, updates) {
   let tarefasCollection;
+  const dadosVelhos = await buscarTarefaPorId(tarefaID)
 
   try {
     tarefasCollection = await connectToMongoDB(dbName, collectionName);
@@ -214,7 +215,7 @@ export async function atualizarTarefa(id, updates) {
 
     // Atualiza contadores no Redis se status mudou
     if (updates.status && updates.status !== tarefaAtual.status) {
-      await atualizarContadorStatus(tarefaAtual.criador, tarefaAtual.status, 1, id);
+      await atualizarContadorStatus(tarefaAtual.criador, tarefaAtual.status, 1, id,dadosVelhos);
     }
 
     return result.modifiedCount > 0;
@@ -324,9 +325,9 @@ export async function deletarTarefa(id) {
   }
 }
 
-export async function atualizarContadorStatus(userId, status, incremento = 1, tarefaID) {
+export async function atualizarContadorStatus(userId, status, incremento = 1, tarefaID, dadosVelhos) {
   const chave = `user:${userId}:tasks:status:${status}`;
-  const dadosVelhos = await buscarTarefaPorId(tarefaID)
+  
   const chaveVelha = `user:${userId}:tasks:status:${dadosVelhos.status}`;
 
   console.log(`Atualizando contador Redis: chave=${chave}, incremento=${incremento}`);
