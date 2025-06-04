@@ -36,10 +36,6 @@ export const criarTask = async (req, res) => {
 
     console.log("Criou aqui de boa");
 
-    // Corrigido: aguarda atualizar contador antes de responder
-    await atualizarContadorStatus(body.criador, body.status, 1);
-    console.log("Contador atualizado com sucesso");
-
     res.status(201).json(novaTarefa);
   } catch (error) {
     console.error('Erro ao criar tarefa:', error);

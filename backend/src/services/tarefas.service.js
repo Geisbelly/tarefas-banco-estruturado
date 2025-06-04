@@ -70,6 +70,13 @@ export async function criarTarefa(
     };
     const result = await tarefasCollection.insertOne(novaTarefa);
     console.log("Tarefa criada com sucesso:", result.insertedId);
+    if(status === "concluida") {
+      console.log("Registrando conclusão diária e atualizando estatísticas de produtividade...");
+      await registrarConclusaoPorData(criador);
+      await atualizarEstatisticasProdutividade(criador);
+    }
+    await atualizarRankingTags(criador, tags);
+    await atualizarContadorStatus(criador, status, 1);
     return result.insertedId;
   } catch (err) {
     console.error("Erro ao criar tarefa:", err);
@@ -216,6 +223,15 @@ export async function atualizarTarefa(id, updates) {
     if (updates.status && updates.status !== tarefaAtual.status) {
       console.log(`Status alterado de "${tarefaAtual.status}" para "${updates.status}"`);
       await atualizarContadorStatus(tarefaAtual.criador, updates.status, 1, tarefaAtual.status);
+      if (updates.status === "concluida") {
+        console.log("Registrando conclusão diária e atualizando estatísticas de produtividade...");
+        await registrarConclusaoPorData(tarefaAtual.criador);
+        await atualizarEstatisticasProdutividade(tarefaAtual.criador);
+      }
+    }
+    if (updates.tags) {
+      console.log("Atualizando ranking de tags...");
+      await atualizarRankingTags(tarefaAtual.criador, updates.tags);
     }
 
     return result.modifiedCount > 0;
@@ -325,7 +341,7 @@ export async function deletarTarefa(id) {
   }
 }
 
-export async function atualizarContadorStatus(userId, status, incremento = 1, statusVelho) {
+export async function atualizarContadorStatus(userId, status, incremento = 1, statusVelho=null) {
   const chave = `user:${userId}:tasks:status:${status}`;
   
   const chaveVelha = `user:${userId}:tasks:status:${statusVelho}`;
@@ -356,4 +372,85 @@ export async function obterContadoresStatus(userId) {
   return resultados;
 }
 
+
+export async function registrarConclusaoPorData(userId) {
+  const hoje = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
+  const chave = `user:${userId}:tasks:completed:${hoje}`;
+
+  try {
+    const novoValor = await redis.incr(chave);
+    console.log(`✅ Conclusão diária registrada: ${chave} = ${novoValor}`);
+  } catch (error) {
+    console.error(`❌ Erro ao registrar conclusão por data (${chave}):`, error);
+  }
+}
+
+export async function atualizarRankingTags(userId, tags = []) {
+  const chave = `user:${userId}:tags:top`;
+
+  try {
+    for (const tag of tags) {
+      await redis.zIncrBy(chave, 1, tag); // incrementa a pontuação da tag
+    }
+    console.log(`🏷️ Tags atualizadas para o ranking: ${tags.join(', ')}`);
+  } catch (error) {
+    console.error(`❌ Erro ao atualizar ranking de tags:`, error);
+  }
+}
+
+export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoMs = null) {
+  const chave = `user:${userId}:stats:productivity`;
+
+  try {
+    const hoje = new Date().toISOString().split("T")[0];
+
+    // Incrementa contador de tarefas criadas hoje
+    await redis.hIncrBy(`${chave}`, `tarefas_criadas_${hoje}`, 1);
+
+    // Atualiza tempo médio de conclusão se fornecido
+    if (tempoConclusaoMs !== null) {
+      const totalTempoKey = `${chave}:soma_tempo_conclusao`;
+      const totalConcluidasKey = `${chave}:qtd_concluidas`;
+
+      await redis.incrBy(totalTempoKey, tempoConclusaoMs);
+      await redis.incr(totalConcluidasKey);
+
+      const soma = await redis.get(totalTempoKey);
+      const qtd = await redis.get(totalConcluidasKey);
+
+      const media = (parseInt(soma) / parseInt(qtd)).toFixed(0);
+      await redis.hSet(`${chave}`, 'tempo_medio_conclusao_ms', media);
+    }
+
+    console.log(`📊 Estatísticas atualizadas para ${userId}`);
+  } catch (error) {
+    console.error(`❌ Erro ao atualizar estatísticas de produtividade:`, error);
+  }
+}
+
+export async function reverterConclusaoTarefa(userId, dataConclusao, tempoConclusaoMs) {
+  const dia = new Date(dataConclusao).toISOString().split("T")[0];
+  const chaveDiaria = `user:${userId}:tasks:completed:${dia}`;
+  const statsKey = `user:${userId}:stats:productivity`;
+
+  try {
+    // Reverte contagem do dia
+    await redis.decrBy(chaveDiaria, 1);
+
+    // Reverte soma do tempo total e contagem de tarefas concluídas
+    await redis.decrBy(`${statsKey}:soma_tempo_conclusao`, tempoConclusaoMs);
+    await redis.decr(`${statsKey}:qtd_concluidas`);
+
+    // Recalcula a média
+    const soma = await redis.get(`${statsKey}:soma_tempo_conclusao`);
+    const qtd = await redis.get(`${statsKey}:qtd_concluidas`);
+
+    const novaMedia = qtd > 0 ? Math.floor(soma / qtd) : 0;
+    await redis.hSet(statsKey, 'tempo_medio_conclusao_ms', novaMedia);
+
+    console.log(`🔁 Conclusão revertida com sucesso para ${userId}`);
+  } catch (err) {
+    console.error("❌ Erro ao reverter conclusão:", err);
+  }
+}
 
