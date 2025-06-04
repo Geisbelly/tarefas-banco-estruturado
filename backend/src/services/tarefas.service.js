@@ -214,8 +214,7 @@ export async function atualizarTarefa(id, updates) {
 
     // Atualiza contadores no Redis se status mudou
     if (updates.status && updates.status !== tarefaAtual.status) {
-      await atualizarContadorStatus(tarefaAtual.criador, tarefaAtual.status, -1);
-      await atualizarContadorStatus(tarefaAtual.criador, updates.status, 1);
+      await atualizarContadorStatus(tarefaAtual.criador, tarefaAtual.status, 1, id);
     }
 
     return result.modifiedCount > 0;
@@ -325,14 +324,18 @@ export async function deletarTarefa(id) {
   }
 }
 
-export async function atualizarContadorStatus(userId, status, incremento = 1) {
+export async function atualizarContadorStatus(userId, status, incremento = 1, tarefaID) {
   const chave = `user:${userId}:tasks:status:${status}`;
+  const dadosVelhos = await buscarTarefaPorId(tarefaID)
+  const chaveVelha = `user:${userId}:tasks:status:${dadosVelhos.status}`;
 
   console.log(`Atualizando contador Redis: chave=${chave}, incremento=${incremento}`);
 
   try {
     const resultado = await redis.incrBy(chave, incremento);
+    const resultado2 = await redis.incrBy(chaveVelha, -1);
     console.log(`Novo valor para ${chave}: ${resultado}`);
+    console.log(`Valor antigo para ${chave}: ${resultado2}`);
   } catch (error) {
     console.error(`Erro ao atualizar contador Redis para ${chave}:`, error);
   }
