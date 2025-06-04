@@ -360,7 +360,7 @@ export async function atualizarContadorStatus(userId, status, incremento = 1, st
 }
 
 export async function obterContadoresStatus(userId) {
-  const statusList = ["pendente", "em andamento", "concluída"];
+  const statusList = ["pendente", "em andamento", "concluida"];
   const resultados = {};
 
   for (const status of statusList) {
