@@ -103,7 +103,7 @@ const mockApiUser = JSON.parse(localStorage.getItem('user'));
 
 // Simula a estrutura do seu serviço getTask
 
-  const sampleTasksFromApi = getTask(mockApiUser.email);
+  // const sampleTasksFromApi = getTask(mockApiUser.email);
   // --- END MOCK API SERVICE ---
 
 
