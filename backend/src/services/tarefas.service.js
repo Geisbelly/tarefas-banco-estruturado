@@ -327,7 +327,7 @@ export async function deletarTarefa(id) {
   }
 }
 
-async function atualizarContadorStatus(userId, status, incremento = 1) {
+export async function atualizarContadorStatus(userId, status, incremento = 1) {
   const chave = `user:${userId}:tasks:status:${status}`;
 
   console.log(`Atualizando contador Redis: chave=${chave}, incremento=${incremento}`);
@@ -340,7 +340,7 @@ async function atualizarContadorStatus(userId, status, incremento = 1) {
   }
 }
 
-async function obterContadoresStatus(userId) {
+export async function obterContadoresStatus(userId) {
   const statusList = ["pendente", "em andamento", "concluída"];
   const resultados = {};
 
@@ -353,8 +353,4 @@ async function obterContadoresStatus(userId) {
   return resultados;
 }
 
-export {
-  obterContadoresStatus,
-  atualizarContadorStatus
-};
 

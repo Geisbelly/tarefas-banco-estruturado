@@ -1,4 +1,3 @@
-import { usuarios } from '../models/usuario.model.js';
 import { 
     adicionarComentario,
     atualizarTarefa,
@@ -6,7 +5,8 @@ import {
     criarTarefa,
     deletarComentario,
     buscarTarefasPorUsuario,
-    obterContadoresStatus
+    obterContadoresStatus,
+    atualizarContadorStatus
  } from '../services/tarefas.service.js';
 
 export const listarTarefas = async (req, res) => {
