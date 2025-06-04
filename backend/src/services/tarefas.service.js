@@ -194,7 +194,7 @@ export async function buscarTarefasPorTags(tags) {
 
 export async function atualizarTarefa(id, updates) {
   let tarefasCollection;
-  const dadosVelhos = await buscarTarefaPorId(tarefaID)
+  const dadosVelhos = await buscarTarefaPorId(id)
 
   try {
     tarefasCollection = await connectToMongoDB(dbName, collectionName);
