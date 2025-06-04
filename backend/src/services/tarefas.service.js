@@ -70,8 +70,6 @@ export async function criarTarefa(
     };
     const result = await tarefasCollection.insertOne(novaTarefa);
     console.log("Tarefa criada com sucesso:", result.insertedId);
-    console.log("Atualizando contador de status no Redis para o criador:", criador, "com status:", status || 'pendente');
-    await atualizarContadorStatus(criador, status || 'pendente', 1);
     return result.insertedId;
   } catch (err) {
     console.error("Erro ao criar tarefa:", err);

@@ -19,21 +19,6 @@ export const listarTarefas = async (req, res) => {
   }
 };
 
-//antigo
-// export const criarTask = async (req, res) => {
-//   try {
-//     const body = req.body;
-//     const novaTarefa = await criarTarefa(body.titulo, body.descricao, body.criador, body.colaboradores, body.status, body.tags, body.dataCriacao, body.dataConclusao, body.comentarios);
-//     res.status(201).json(novaTarefa);
-//     console.log("Criou aqui de boa")
-//     await atualizarContadorStatus(criador, novaTarefa.status, 1);
-//     console.log("Contador atualizado com sucesso")
-//   } catch (error) {
-//     console.error('Erro ao criar tarefa:', error);
-//     res.status(500).json({ error: 'Erro interno ao criar tarefa' });
-//   }
-// };
-
 export const criarTask = async (req, res) => {
   try {
     const body = req.body;
@@ -77,25 +62,32 @@ export const criarTaskComentario = async (req, res) => {
 
 export const updateTask = async (req, res) => {
   try {
-    const id = req.body.id;          
-    const dadosNovos = req.body;        
+    const id = req.body.id;
+    const dadosNovos = req.body;
 
-    // Supondo que atualizarTarefa(id, dadosNovos) retorne a tarefa atualizada
     const tarefaAtualizada = await atualizarTarefa(id, dadosNovos);
 
     if (!tarefaAtualizada) {
       return res.status(404).json({ error: 'Tarefa não encontrada' });
     }
 
-    res.status(200).json(tarefaAtualizada); // Retorna a tarefa atualizada
+    console.log("Tarefa atualizada com sucesso");
+
+    await atualizarContadorStatus(dadosNovos.criador, dadosNovos.status, 1);
+    console.log("Contador atualizado com sucesso");
+
+    res.status(200).json(tarefaAtualizada);
   } catch (error) {
     console.error('Erro ao atualizar tarefa:', error);
-    res.status(500).json({ error: 'Erro interno ao atualizar tarefa' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Erro interno ao atualizar tarefa' });
+    }
   }
 };
+
 export const deleteTask = async (req, res) => {
   try {
-    const id = req.params.id;            // Pega o id da URL
+    const id = req.params.id;
 
     const tarefaDeletada = await deletarTarefa(id);
 
@@ -103,12 +95,20 @@ export const deleteTask = async (req, res) => {
       return res.status(404).json({ error: 'Tarefa não encontrada' });
     }
 
-    res.status(200).json(tarefaDeletada); // Retorna a tarefa deletada
+    console.log("Tarefa deletada com sucesso");
+
+    await atualizarContadorStatus(tarefaDeletada.criador, tarefaDeletada.status, -1);
+    console.log("Contador atualizado com sucesso");
+
+    res.status(200).json(tarefaDeletada);
   } catch (error) {
     console.error('Erro ao deletar tarefa:', error);
-    res.status(500).json({ error: 'Erro interno ao deletar tarefa' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Erro interno ao deletar tarefa' });
+    }
   }
 };
+
 
 export const deletarComentarioTask = async (req, res) => {
   try {
