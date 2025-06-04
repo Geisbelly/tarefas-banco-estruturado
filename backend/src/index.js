@@ -14,10 +14,10 @@ const PORT = process.env.PORT || 3000;
 
 // 2. DEFINA AS OPÇÕES DO CORS
 const corsOptions = {
-  origin: 'http://localhost:5173', // Permita requisições do seu frontend Vite
+  origin: '*', // Permita requisições do seu frontend Vite
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   allowedHeaders: "Content-Type, Authorization", // Adicione outros cabeçalhos se necessário
-  credentials: true, // Se você lida com cookies/sessões
+  // credentials: true, // Se você lida com cookies/sessões
   optionsSuccessStatus: 200 // Para compatibilidade
 };
 
