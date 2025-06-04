@@ -73,9 +73,6 @@ export const updateTask = async (req, res) => {
 
     console.log("Tarefa atualizada com sucesso");
 
-    await atualizarContadorStatus(dadosNovos.criador, dadosNovos.status, 1);
-    console.log("Contador atualizado com sucesso");
-
     res.status(200).json(tarefaAtualizada);
   } catch (error) {
     console.error('Erro ao atualizar tarefa:', error);
