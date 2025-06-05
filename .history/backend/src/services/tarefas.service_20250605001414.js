@@ -281,18 +281,18 @@ export async function atualizarTarefa(id, updates) {
           const ms = new Date() - new Date(tarefaAtual.dataCriacao);
           await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms);
           await registrarConclusaoPorData(tarefaAtual.criador);
-        } 
+        } else {
+          // Tarefa está sendo desmarcada como concluída (voltou pra pendente)
+          
+        }
 
         
-      }
-      else{
-        if (tarefaAtual.status === "concluida") {
-          // Tarefa está sendo marcada como concluída agora
-          console.log('Decremente')
+      }else{
+        console.log('Decremente')
           const ms = new Date(tarefaAtual.dataCriacao) - new Date(tarefaAtual.dataConclusao);
           await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms, true);
           await registrarConclusaoPorData(tarefaAtual.criador, tarefaAtual.dataConclusao);
-        } 
+
       }
     }
 

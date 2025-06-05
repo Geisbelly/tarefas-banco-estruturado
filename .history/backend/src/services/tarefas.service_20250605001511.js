@@ -293,6 +293,8 @@ export async function atualizarTarefa(id, updates) {
           await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms, true);
           await registrarConclusaoPorData(tarefaAtual.criador, tarefaAtual.dataConclusao);
         } 
+        
+
       }
     }
 

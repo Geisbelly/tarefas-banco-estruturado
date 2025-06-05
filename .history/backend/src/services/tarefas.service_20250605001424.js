@@ -286,13 +286,11 @@ export async function atualizarTarefa(id, updates) {
         
       }
       else{
-        if (tarefaAtual.status === "concluida") {
-          // Tarefa está sendo marcada como concluída agora
-          console.log('Decremente')
-          const ms = new Date(tarefaAtual.dataCriacao) - new Date(tarefaAtual.dataConclusao);
-          await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms, true);
-          await registrarConclusaoPorData(tarefaAtual.criador, tarefaAtual.dataConclusao);
-        } 
+        console.log('Decremente')
+        const ms = new Date(tarefaAtual.dataCriacao) - new Date(tarefaAtual.dataConclusao);
+        await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms, true);
+        await registrarConclusaoPorData(tarefaAtual.criador, tarefaAtual.dataConclusao);
+
       }
     }
 

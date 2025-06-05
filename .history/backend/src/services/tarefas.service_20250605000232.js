@@ -281,25 +281,22 @@ export async function atualizarTarefa(id, updates) {
           const ms = new Date() - new Date(tarefaAtual.dataCriacao);
           await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms);
           await registrarConclusaoPorData(tarefaAtual.criador);
-        } 
-
-        
-      }
-      else{
-        if (tarefaAtual.status === "concluida") {
-          // Tarefa está sendo marcada como concluída agora
+        } else {
+          // Tarefa está sendo desmarcada como concluída (voltou pra pendente)
           console.log('Decremente')
           const ms = new Date(tarefaAtual.dataCriacao) - new Date(tarefaAtual.dataConclusao);
           await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms, true);
           await registrarConclusaoPorData(tarefaAtual.criador, tarefaAtual.dataConclusao);
-        } 
+        }
+
+        
       }
     }
 
     if (updates.hasOwnProperty('tags')) {
       console.log(`Iniciando atualização do ranking de tags para criador ${tarefaAtual.criador}...`);
-      const tagsAntigas = tarefaAtual.tags || []; 
-      const tagsNovas = updates.tags || [];    
+      const tagsAntigas = tarefaAtual.tags || []; // Tags antes da atualização (garante array)
+      const tagsNovas = updates.tags || [];     // Novas tags (garante array)
 
       await atualizarRankingTags(tarefaAtual.criador, tagsNovas, tagsAntigas);
     }
@@ -307,8 +304,11 @@ export async function atualizarTarefa(id, updates) {
     return result.modifiedCount > 0;
   } catch (err) {
     console.error(`Erro ao atualizar tarefa com ID ${id}:`, err);
-    return false; 
+    return false; // ou throw err; dependendo de como você quer tratar erros mais acima
   } finally {
+    // Fechar a conexão se ela foi aberta nesta função e não é global/gerenciada por pool
+    // if (mongoClient) await closeMongoDBConnection(mongoClient);
+    // Se closeMongoDBConnection não recebe client ou gerencia globalmente:
     if (tarefasCollection) await closeMongoDBConnection();
   }
 }
