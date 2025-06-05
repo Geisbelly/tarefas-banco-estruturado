@@ -73,7 +73,7 @@ export async function criarTarefa(
     if(status === "concluida") {
       console.log("Registrando conclusão diária e atualizando estatísticas de produtividade...");
       await registrarConclusaoPorData(criador);
-      await atualizarEstatisticasProdutividade(criador,null,false,true);
+      await atualizarEstatisticasProdutividade(criador);
     }
     await atualizarRankingTags(criador, tags);
     await atualizarContadorStatus(criador, status, 1);
@@ -555,6 +555,7 @@ export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoM
       // Incrementa valores
       await redis.incrBy(totalTempoKey, tempoConclusaoMs);
       if(atualizarConclusao){
+        await redis.hIncrBy(chave, `tarefas_criadas_${hoje}`, -1);
         await redis.incrBy(totalConcluidasKey,-1)
       }else{
         await redis.incr(totalConcluidasKey)
