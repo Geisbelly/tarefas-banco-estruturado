@@ -50,75 +50,42 @@ export async function criarTarefa(
     status,
     tags
   });
-
-  // Validação do status (movida para antes da conexão para evitar conexões desnecessárias)
   if (status && !statusPermitidos.includes(status)) {
     console.error(`Status inválido: "${status}". Status permitidos são: ${statusPermitidos.join(', ')}`);
     return null;
   }
 
-  const statusFinal = status || "pendente"; // Garante que statusFinal tenha um valor
-
   try {
-    tarefasCollection = await connectToMongoDB(dbName, collectionName);
+    tarefasCollection = await connectToMongoDB(dbName,collectionName );
     const novaTarefa = {
       titulo,
       descricao,
       dataCriacao: new Date(),
-      status: statusFinal, // Usa statusFinal
+      status: (status) || "pendente",
       criador,
       colaboradores,
-      dataConclusao: statusFinal === 'concluida' ? new Date() : null,
+      dataConclusao: status === 'concluido' ? new Date() : null, // Inicialmente nulo
       tags,
       comentarios: []
     };
     const result = await tarefasCollection.insertOne(novaTarefa);
-    console.log("Tarefa criada com sucesso:", result.insertedId.toString());
-
-    // Atualizar métricas para o criador
-    console.log(`Atualizando métricas para o criador: ${criador}`);
+    console.log("Tarefa criada com sucesso:", result.insertedId);
+    if(status === "concluida") {
+      console.log("Registrando conclusão diária e atualizando estatísticas de produtividade...");
+      await registrarConclusaoPorData(criador);
+      
+      await atualizarEstatisticasProdutividade(criador,0,false,true,false);
+    }else{
+      await atualizarEstatisticasProdutividade(criador,null,false,true,false);
+    }
     await atualizarRankingTags(criador, tags);
-    await atualizarContadorStatus(criador, statusFinal, 1); // Usa statusFinal
-    if (statusFinal === "concluida") {
-      console.log(`Registrando conclusão e produtividade para o criador: ${criador}`);
-      await registrarConclusaoPorData(criador); // Passa o ID do usuário
-      await atualizarEstatisticasProdutividade(criador, 0, false, true, false); // tempoParaConcluir = 0 para nova tarefa concluída
-    } else {
-      await atualizarEstatisticasProdutividade(criador, null, false, true, false);
-    }
-
-    // Atualizar métricas para cada colaborador
-    if (colaboradores && colaboradores.length > 0) {
-      console.log(`Atualizando métricas para colaboradores: ${colaboradores.join(', ')}`);
-      for (const colaboradorId of colaboradores) {
-        if (colaboradorId && colaboradorId !== criador) { // Evita reprocessar o criador se ele também for colaborador
-          console.log(`Atualizando métricas para o colaborador: ${colaboradorId}`);
-          await atualizarRankingTags(colaboradorId, tags);
-          await atualizarContadorStatus(colaboradorId, statusFinal, 1); // Usa statusFinal
-
-          if (statusFinal === "concluida") {
-            console.log(`Registrando conclusão e produtividade para o colaborador: ${colaboradorId}`);
-            await registrarConclusaoPorData(colaboradorId); // Passa o ID do usuário
-            await atualizarEstatisticasProdutividade(colaboradorId, 0, false, true, false);
-          } else {
-            await atualizarEstatisticasProdutividade(colaboradorId, null, false, true, false); // Marcando como se fosse uma nova tarefa associada
-          }
-        }
-      }
-    }
-    
-    return result.insertedId.toString(); // Retorna o ID como string
+    await atualizarContadorStatus(criador, status, 1);
+    return result.insertedId;
   } catch (err) {
     console.error("Erro ao criar tarefa:", err);
-    if (err.code === 121) { 
-        console.error("Detalhes da validação:", err.errInfo?.details);
-    }
     return null;
   } finally {
-    if (tarefasCollection) { // Verifica se a conexão foi estabelecida antes de tentar fechar
-        await closeMongoDBConnection();
-        console.log("Conexão com MongoDB fechada.");
-    }
+    if (tarefasCollection) await closeMongoDBConnection();
   }
 }
 
@@ -289,143 +256,59 @@ export async function atualizarTarefa(id, updates) {
   try {
     tarefasCollection = await connectToMongoDB(dbName, collectionName);
 
-    if (!ObjectId.isValid(id)) {
-      console.error(`ID inválido fornecido para atualização: ${id}`);
-      return false;
-    }
+    if (!ObjectId.isValid(id)) return false;
 
     const tarefaAtual = await tarefasCollection.findOne({ _id: new ObjectId(id) });
-    if (!tarefaAtual) {
-      console.warn(`Tarefa com ID ${id} não encontrada para atualização.`);
-      return false;
-    }
+    if (!tarefaAtual) return false;
+
 
     // Filtra _id e id para não serem setados diretamente
     const dadosFiltrados = Object.fromEntries(
       Object.entries(updates).filter(([chave]) => chave !== "_id" && chave !== "id")
     );
 
-    // Se dataConclusao está sendo passada explicitamente como null, mas o status é 'concluida',
-    // ou se o status está mudando para 'concluida', definir dataConclusao para new Date().
-    if (updates.status) {
-      if (updates.status === "concluida" && tarefaAtual.status !== "concluida") {
-        dadosFiltrados.dataConclusao = new Date();
-      } else if (tarefaAtual.status === "concluida" && updates.status !== "concluida") {
-        dadosFiltrados.dataConclusao = null;
-      }
-    }
-
-
     const result = await tarefasCollection.updateOne(
       { _id: new ObjectId(id) },
       { $set: dadosFiltrados }
     );
 
-    // --- Lógica de Atualização de Métricas ---
+    await atualizarRankingTags(tarefaAtual.criador,updates.tags )
 
-    const criadorId = tarefaAtual.criador;
-    const statusAntigo = tarefaAtual.status;
-    const statusNovo = updates.status || statusAntigo; // Se não houver update de status, usa o antigo
+    // Atualiza contadores no Redis se status mudou
+    if (updates.status && updates.status !== tarefaAtual.status) {
+      console.log(`Status alterado de "${tarefaAtual.status}" para "${updates.status}" para tarefa ${id}`);
+      await atualizarContadorStatus(tarefaAtual.criador, updates.status, 1, tarefaAtual.status);
 
-    // 1. ATUALIZAR MÉTRICAS DO CRIADOR
-    // Se o status mudou para o criador
-    if (updates.status && updates.status !== statusAntigo) {
-      console.log(`Status alterado para criador ${criadorId}: de "${statusAntigo}" para "${statusNovo}" na tarefa ${id}`);
-      await atualizarContadorStatus(criadorId, statusNovo, 1, statusAntigo);
-
-      if (statusNovo === "concluida" && statusAntigo !== "concluida") {
-        console.log(`Registrando conclusão para criador ${criadorId}`);
+      // Tarefa sendo concluída agora
+      if (updates.status === "concluida" && tarefaAtual.status !== "concluida") {
+        console.log('Incrementando estatísticas');
         const ms = new Date() - new Date(tarefaAtual.dataCriacao);
-        await atualizarEstatisticasProdutividade(criadorId, ms, false, false, true); // tempo, isDecremento, isNova, isConcluida
-        await registrarConclusaoPorData(criadorId, formatDataParaAPI(new Date()));
-      } else if (statusAntigo === "concluida" && statusNovo !== "concluida") {
-        console.log(`Removendo conclusão para criador ${criadorId}`);
-        // Nota: O tempo para 'decrementar' produtividade se basearia na dataConclusao anterior
-        const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
-        const ms = new Date(tarefaAtual.dataCriacao) - dataConclusaoAnterior; // Isso resultará em negativo, sua função deve tratar
-        await atualizarEstatisticasProdutividade(criadorId, ms, true, false, false); // tempo, isDecremento, isNova, isConcluida (não é mais)
-        await removerConclusaoPorData(criadorId, formatDataParaAPI(dataConclusaoAnterior));
+        await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms); // incrementa
+        await registrarConclusaoPorData(tarefaAtual.criador);
+      }
+
+      // Tarefa voltando para pendente
+      else if (tarefaAtual.status === "concluida" && updates.status !== "concluida") {
+        console.log('Decrementando estatísticas');
+        const ms = new Date(tarefaAtual.dataCriacao) - new Date(tarefaAtual.dataConclusao);
+        await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms, true); // decrementa
+        await registrarConclusaoPorData(tarefaAtual.criador, tarefaAtual.dataConclusao); // remove de concluídos
       }
     }
 
-    // Se as tags foram atualizadas para o criador
+
     if (updates.hasOwnProperty('tags')) {
-      console.log(`Atualizando tags para criador ${criadorId}`);
-      await atualizarRankingTags(criadorId, updates.tags || [], tarefaAtual.tags || []);
+      console.log(`Iniciando atualização do ranking de tags para criador ${tarefaAtual.criador}...`);
+      const tagsAntigas = tarefaAtual.tags || []; 
+      const tagsNovas = updates.tags || [];    
+
+      await atualizarRankingTags(tarefaAtual.criador, tagsNovas, tagsAntigas);
     }
-
-    // 2. ATUALIZAR MÉTRICAS DE COLABORADORES
-    if (updates.hasOwnProperty('colaboradores')) {
-      const colaboradoresAntigos = new Set(tarefaAtual.colaboradores || []);
-      const colaboradoresNovos = new Set(updates.colaboradores || []);
-
-      // Colaboradores Adicionados
-      for (const colabId of colaboradoresNovos) {
-        if (!colaboradoresAntigos.has(colabId) && colabId !== criadorId) {
-          console.log(`Colaborador ${colabId} ADICIONADO à tarefa ${id}. Atualizando métricas.`);
-          await atualizarRankingTags(colabId, dadosFiltrados.tags || tarefaAtual.tags || []); // Usa as tags atuais da tarefa
-          await atualizarContadorStatus(colabId, statusNovo, 1); // Adiciona ao status atual da tarefa
-
-          // Se a tarefa já está concluída ou sendo concluída nesta atualização
-          if (statusNovo === "concluida") {
-            const tempoConclusao = dadosFiltrados.dataConclusao || (tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date());
-            const ms = tempoConclusao - new Date(tarefaAtual.dataCriacao);
-            await atualizarEstatisticasProdutividade(colabId, ms, false, true, true); // tempo, isDecremento, isNovaTarefaAssociada, isConcluida
-            await registrarConclusaoPorData(colabId, formatDataParaAPI(tempoConclusao));
-          } else {
-            // Apenas marca que uma nova tarefa foi associada (não criada por ele, nem concluída por ele ainda)
-             await atualizarEstatisticasProdutividade(colabId, null, false, true, false);
-          }
-        }
-      }
-
-      // Colaboradores Removidos
-      for (const colabId of colaboradoresAntigos) {
-        if (!colaboradoresNovos.has(colabId) && colabId !== criadorId) {
-          console.log(`Colaborador ${colabId} REMOVIDO da tarefa ${id}. Decrementando métricas.`);
-          await atualizarRankingTags(colabId, [], dadosFiltrados.tags || tarefaAtual.tags || []); // Remove as tags antigas da tarefa
-          await atualizarContadorStatus(colabId, statusAntigo, -1); // Remove do status antigo da tarefa
-
-          // Se a tarefa estava concluída quando ele foi removido
-          if (statusAntigo === "concluida") {
-             const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
-             const ms = new Date(tarefaAtual.dataCriacao) - dataConclusaoAnterior;
-            await atualizarEstatisticasProdutividade(colabId, ms, true, false, false); // tempo, isDecremento, isNova, isConcluida (não é mais para ele)
-            await removerConclusaoPorData(colabId, formatDataParaAPI(dataConclusaoAnterior));
-          } else {
-            // Se a tarefa não estava concluída, apenas decrementa a associação
-            // O "isNova" para decremento pode não fazer sentido, ajuste sua função de estatísticas
-            await atualizarEstatisticasProdutividade(colabId, null, true, false, false); // (tempo=null, isDecremento=true, isNova=false, isConcluida=false)
-          }
-        }
-      }
-    } else if (updates.status && updates.status !== statusAntigo) {
-      // Se apenas o status mudou, mas a lista de colaboradores não, atualizar métricas dos colaboradores existentes
-      const colaboradoresAtuais = new Set(tarefaAtual.colaboradores || []);
-      for (const colabId of colaboradoresAtuais) {
-        if (colabId !== criadorId) {
-          console.log(`Status da tarefa ${id} alterado para ${statusNovo}. Atualizando para colaborador ${colabId}.`);
-          await atualizarContadorStatus(colabId, statusNovo, 1, statusAntigo);
-
-          if (statusNovo === "concluida" && statusAntigo !== "concluida") {
-            const ms = (dadosFiltrados.dataConclusao || new Date()) - new Date(tarefaAtual.dataCriacao);
-            await atualizarEstatisticasProdutividade(colabId, ms, false, false, true);
-            await registrarConclusaoPorData(colabId, formatDataParaAPI(dadosFiltrados.dataConclusao || new Date()));
-          } else if (statusAntigo === "concluida" && statusNovo !== "concluida") {
-            const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
-            const ms = new Date(tarefaAtual.dataCriacao) - dataConclusaoAnterior;
-            await atualizarEstatisticasProdutividade(colabId, ms, true, false, false);
-            await removerConclusaoPorData(colabId, formatDataParaAPI(dataConclusaoAnterior));
-          }
-        }
-      }
-    }
-
 
     return result.modifiedCount > 0;
   } catch (err) {
     console.error(`Erro ao atualizar tarefa com ID ${id}:`, err);
-    return false;
+    return false; 
   } finally {
     if (tarefasCollection) await closeMongoDBConnection();
   }

@@ -307,6 +307,7 @@ export async function atualizarTarefa(id, updates) {
 
     // Se dataConclusao está sendo passada explicitamente como null, mas o status é 'concluida',
     // ou se o status está mudando para 'concluida', definir dataConclusao para new Date().
+    // Se o status está mudando DE 'concluida' para outro, definir dataConclusao para null.
     if (updates.status) {
       if (updates.status === "concluida" && tarefaAtual.status !== "concluida") {
         dadosFiltrados.dataConclusao = new Date();
