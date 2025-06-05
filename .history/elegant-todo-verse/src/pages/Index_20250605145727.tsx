@@ -13,8 +13,10 @@ const Index = () => {
     
     // Redirecionar para o dashboard se logado, ou para auth se não estiver
     if (!isLoggedIn) {
+      navigate("/dashboard");
+    } else {
       navigate("/auth");
-    } 
+    }
   }, [navigate]);
 
   return (

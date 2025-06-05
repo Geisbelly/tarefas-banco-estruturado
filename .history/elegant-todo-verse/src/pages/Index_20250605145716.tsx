@@ -7,15 +7,7 @@ import { BarChart, ListTodo } from "lucide-react";
 const Index = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Verificar se o usuário está logado
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    
-    // Redirecionar para o dashboard se logado, ou para auth se não estiver
-    if (!isLoggedIn) {
-      navigate("/auth");
-    } 
-  }, [navigate]);
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center">

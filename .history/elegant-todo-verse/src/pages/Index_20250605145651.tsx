@@ -12,9 +12,11 @@ const Index = () => {
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     
     // Redirecionar para o dashboard se logado, ou para auth se não estiver
-    if (!isLoggedIn) {
+    if (isLoggedIn) {
+      navigate("/dashboard");
+    } else {
       navigate("/auth");
-    } 
+    }
   }, [navigate]);
 
   return (

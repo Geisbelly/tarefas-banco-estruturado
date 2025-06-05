@@ -14,7 +14,9 @@ const Index = () => {
     // Redirecionar para o dashboard se logado, ou para auth se não estiver
     if (!isLoggedIn) {
       navigate("/auth");
-    } 
+    } else {
+      
+    }
   }, [navigate]);
 
   return (
