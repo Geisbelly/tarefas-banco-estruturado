@@ -84,7 +84,7 @@ const Navigation = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-700/50 bg-gray-900/90 backdrop-blur-sm">
       <div className="container flex h-16 items-center px-4 sm:px-6">
-        <Link to="/dashboard" className="mr-6 flex items-center space-x-2">
+        <Link to="/" className="mr-6 flex items-center space-x-2">
           <span className="font-bold text-xl bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
             Sistema de Tarefas
           </span>

@@ -26,7 +26,7 @@ const getTask = async (usuario:string) => {
 };
 const login = async (email: string, senha: string) => {
       try {
-        console.log("Voltando a rota 2")
+        console.log("Voltando a rota")
         const res = await fetch("https://tarefas-banco-estruturado.onrender.com/auth", {
           method: "POST",
           headers: {
@@ -34,7 +34,6 @@ const login = async (email: string, senha: string) => {
           },
           body: JSON.stringify({ email, senha })
         });
-        console.log("Voltando a rota 3")
         if (!res.ok) {
           const text = await res.text();
           throw new Error(`Erro ${res.status}: ${text}`);

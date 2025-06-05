@@ -31,10 +31,9 @@ const Auth = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    console.log("Voltando a rota")
+    con
 
     login(loginEmail, loginPassword).then((user) => {
-      console.log("Voltando a rota")
       setIsLoading(false);
       if (user) {
         localStorage.setItem('isLoggedIn', 'true');

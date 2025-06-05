@@ -34,7 +34,6 @@ const Auth = () => {
     console.log("Voltando a rota")
 
     login(loginEmail, loginPassword).then((user) => {
-      console.log("Voltando a rota")
       setIsLoading(false);
       if (user) {
         localStorage.setItem('isLoggedIn', 'true');

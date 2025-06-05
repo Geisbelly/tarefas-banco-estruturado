@@ -34,7 +34,6 @@ const login = async (email: string, senha: string) => {
           },
           body: JSON.stringify({ email, senha })
         });
-        console.log("Voltando a rota 3")
         if (!res.ok) {
           const text = await res.text();
           throw new Error(`Erro ${res.status}: ${text}`);

@@ -60,33 +60,35 @@ const CustomChartTooltipContent = (props: any) => {
 };
 // --- Fim Componentes UI ---
 
-// --- Tipos para dados das APIs AJUSTADOS ---
+// --- Tipos para dados das APIs (AJUSTAR CONFORME RESPOSTAS REAIS) ---
 interface ApiProductivityData {
-  // A chave para tarefas criadas é dinâmica, ex: "tarefas_criadas_2025-06-05": string
-  [key: `tarefas_criadas_${string}`]: string | number | undefined; // Para acomodar a chave dinâmica
-  tempo_medio_conclusao_ms?: number;
-  total_concluidas?: number; // Presente no exemplo, pode ser útil
-  taxaConclusaoSemanal?: number; // Esperado pela especificação Redis, mas não no exemplo API
+  totalTarefasGeral?: number;
+  totalComentarios?: number;
+  totalTagsUnicas?: number;
+  tempoMedioConclusao?: string; // Ex: "2.5 dias", "10 horas", "N/A"
+  tarefasCriadasHoje?: number;
+  taxaConclusaoSemanal?: number; // Percentual, ex: 75 para 75%
 }
 
 interface ApiStatusData {
   pendente?: number;
-  "em andamento"?: number; // Chave exata do seu exemplo de log
+  "em_andamento"?: number;
+  "em andamento"?: number; // Cobrir variações
   concluida?: number;
 }
 
 interface ApiTagData {
-  value: string; // Corrigido de 'tag' para 'value'
-  score: number; // Corrigido de 'count' para 'score'
+  tag: string;
+  count: number;
 }
 
-// Para a API /concluidas, que retorna um objeto de data:contagem
-interface ApiConcluidasPorDia {
-  [date: string]: number; // Ex: "2025-06-05": 9
+interface ApiConcluidasDiariamenteData {
+  dia: string; // Ex: "Dom", "Seg"
+  tarefasConcluidas: number;
 }
 // --- Fim Tipos ---
 
-// --- Componente Statistics (definição permanece a mesma) ---
+// --- Componente Statistics ---
 interface StatisticsProps {
   userIdentifier: string | null;
   generalStats: {
@@ -94,15 +96,15 @@ interface StatisticsProps {
     pendingTasks: number;
     inProgressTasks: number;
     completedTasks: number;
-    totalComments: number;
-    uniqueTags: number;
+    totalComments: number; // Vindo da API de produtividade
+    uniqueTags: number;    // Vindo da API de produtividade
     avgCompletionTime: string;
     tasksCreatedToday: number;
     weeklyCompletionRate: number;
   } | null;
   statusChartData: { name: string; value: number; fill: string }[];
-  activityChartData: { dia: string; tarefasConcluidas: number }[];
-  tagsChartData: { tag: string; count: number }[]; // O componente Statistics ainda espera 'tag' e 'count'
+  activityChartData: { dia: string; tarefasConcluidas: number }[]; // Mudou para tarefas CONCLUÍDAS
+  tagsChartData: { tag: string; count: number }[]; // Top 5 tags
 }
 
 const Statistics = ({
@@ -126,7 +128,7 @@ const Statistics = ({
     );
   }
 
-  if (!generalStats || (generalStats.totalTasks === 0 && generalStats.tasksCreatedToday === 0 && generalStats.pendingTasks === 0 && generalStats.inProgressTasks === 0 && generalStats.completedTasks === 0)) {
+  if (!generalStats || (generalStats.totalTasks === 0 && generalStats.tasksCreatedToday === 0)) { // Ajuste na condição de "sem dados"
     return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4">
             <Info className="w-16 h-16 mb-4 text-gray-500" />
@@ -137,7 +139,7 @@ const Statistics = ({
     );
   }
 
-  const stats = generalStats;
+  const stats = generalStats; // Dados já vêm processados
 
   return (
     <div className="container mx-auto px-2 sm:px-4 py-8">
@@ -149,29 +151,42 @@ const Statistics = ({
         {userIdentifier && <p className="text-xs text-gray-500 mt-1">Utilizador: <code className="bg-gray-700 p-1 rounded text-gray-300">{userIdentifier}</code></p>}
       </div>
 
+      {/* Cards de Estatísticas Principais - agora 6 cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-4 mb-8">
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="flex items-center text-gray-300 text-sm font-medium"><ListChecks className="w-4 h-4 mr-2 text-blue-400"/>Total Tarefas Ativas</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center text-gray-300 text-sm font-medium"><ListChecks className="w-4 h-4 mr-2 text-blue-400"/>Total de Tarefas</CardTitle>
+          </CardHeader>
           <CardContent><div className="text-2xl font-bold text-white">{stats.totalTasks}</div></CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="flex items-center text-gray-300 text-sm font-medium"><TrendingUp className="w-4 h-4 mr-2 text-green-400"/>Taxa Conclusão (Sem.)</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center text-gray-300 text-sm font-medium"><TrendingUp className="w-4 h-4 mr-2 text-green-400"/>Taxa Conclusão (Sem.)</CardTitle>
+          </CardHeader>
           <CardContent><div className="text-2xl font-bold text-green-400">{stats.weeklyCompletionRate}%</div></CardContent>
         </Card>
          <Card>
-          <CardHeader className="pb-2"><CardTitle className="flex items-center text-gray-300 text-sm font-medium"><Zap className="w-4 h-4 mr-2 text-yellow-400"/>Tarefas Criadas Hoje</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center text-gray-300 text-sm font-medium"><Zap className="w-4 h-4 mr-2 text-yellow-400"/>Tarefas Criadas Hoje</CardTitle>
+          </CardHeader>
           <CardContent><div className="text-2xl font-bold text-yellow-400">{stats.tasksCreatedToday}</div></CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="flex items-center text-gray-300 text-sm font-medium"><CalendarCheck2 className="w-4 h-4 mr-2 text-teal-400"/>Tempo Médio Conclusão</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center text-gray-300 text-sm font-medium"><CalendarCheck2 className="w-4 h-4 mr-2 text-teal-400"/>Tempo Médio Conclusão</CardTitle>
+          </CardHeader>
           <CardContent><div className="text-xl font-bold text-teal-400">{stats.avgCompletionTime || "N/A"}</div></CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="flex items-center text-gray-300 text-sm font-medium"><MessageSquare className="w-4 h-4 mr-2 text-orange-400"/>Total Comentários</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center text-gray-300 text-sm font-medium"><MessageSquare className="w-4 h-4 mr-2 text-orange-400"/>Total Comentários</CardTitle>
+          </CardHeader>
           <CardContent><div className="text-2xl font-bold text-orange-400">{stats.totalComments}</div></CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="flex items-center text-gray-300 text-sm font-medium"><Tags className="w-4 h-4 mr-2 text-purple-400"/>Tags (Top {tagsChartData.length})</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center text-gray-300 text-sm font-medium"><Tags className="w-4 h-4 mr-2 text-purple-400"/>Tags Únicas</CardTitle>
+          </CardHeader>
           <CardContent><div className="text-2xl font-bold text-purple-400">{stats.uniqueTags}</div></CardContent>
         </Card>
       </div>
@@ -185,19 +200,25 @@ const Statistics = ({
 
         <TabsContent value="status" className="mt-0">
           <Card>
-            <CardHeader><CardTitle>Distribuição por Estado</CardTitle><CardDescription>Visão geral do estado atual das suas tarefas.</CardDescription></CardHeader>
+            <CardHeader>
+              <CardTitle>Distribuição por Estado</CardTitle>
+              <CardDescription>Visão geral do estado atual das suas tarefas.</CardDescription>
+            </CardHeader>
             <CardContent className="flex justify-center">
               <div className="h-72 sm:h-80 w-full max-w-md">
                 <ChartContainer>
                   <PieChart>
                     <Tooltip content={<CustomChartTooltipContent />} cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}/>
-                    <Pie data={statusChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 80 : 100} labelLine={false}
+                    <Pie
+                      data={statusChartData} dataKey="value" nameKey="name" cx="50%" cy="50%"
+                      outerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 80 : 100}
+                      labelLine={false}
                       label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, name, value }) => {
                         const RADIAN = Math.PI / 180;
                         const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
                         const x = cx + radius * Math.cos(-midAngle * RADIAN);
                         const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                        if (percent * 100 < 5 || value === 0) return null;
+                        if (percent * 100 < 5) return null;
                         return <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize="10px">{`${name} (${value})`}</text>;
                       }}
                     >
@@ -213,7 +234,10 @@ const Statistics = ({
 
         <TabsContent value="activity" className="mt-0">
           <Card>
-            <CardHeader><CardTitle>Tarefas Concluídas nos Últimos 7 Dias</CardTitle><CardDescription>Número de tarefas finalizadas por dia.</CardDescription></CardHeader>
+            <CardHeader>
+              <CardTitle>Tarefas Concluídas nos Últimos 7 Dias</CardTitle>
+              <CardDescription>Número de tarefas finalizadas por dia.</CardDescription>
+            </CardHeader>
             <CardContent>
               <div className="h-72 sm:h-80 w-full">
                 <ChartContainer>
@@ -232,7 +256,10 @@ const Statistics = ({
 
         <TabsContent value="tags" className="mt-0">
           <Card>
-            <CardHeader><CardTitle>Top Tags Mais Usadas</CardTitle><CardDescription>As tags mais frequentes nas suas tarefas.</CardDescription></CardHeader>
+            <CardHeader>
+              <CardTitle>Top 5 Tags Mais Usadas</CardTitle>
+              <CardDescription>As tags mais frequentes nas suas tarefas.</CardDescription>
+            </CardHeader>
             <CardContent>
               <div className="h-72 sm:h-80 w-full mb-6">
                 <ChartContainer>
@@ -263,41 +290,6 @@ const Statistics = ({
 };
 // --- Fim Statistics Component ---
 
-// --- Funções Auxiliares ---
-const formatDataParaAPI = (data: Date): string => {
-  const ano = data.getFullYear();
-  const mes = (data.getMonth() + 1).toString().padStart(2, '0');
-  const dia = data.getDate().toString().padStart(2, '0');
-  return `${ano}-${mes}-${dia}`;
-};
-
-const formatMillisecondsToReadable = (ms: number | undefined | null): string => {
-  if (ms === undefined || ms === null || ms <= 0) return "N/A";
-
-  let seconds = Math.floor(ms / 1000);
-  let minutes = Math.floor(seconds / 60);
-  let hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  seconds %= 60;
-  minutes %= 60;
-  hours %= 24;
-
-  const parts: string[] = [];
-  if (days > 0) parts.push(`${days}d`);
-  if (hours > 0) parts.push(`${hours}h`);
-  if (days === 0 && minutes > 0) parts.push(`${minutes}m`);
-  if (days === 0 && hours === 0 && minutes === 0 && seconds > 0) parts.push(`${seconds}s`);
-  
-  if (parts.length === 0) { // Caso de ms muito pequenos mas > 0
-    if (ms < 1000) return `< 1s`;
-    return `< 1m`; // Fallback se segundos for 0 mas minutos não
-  }
-  return parts.join(' ');
-};
-// --- Fim Funções Auxiliares ---
-
-
 // --- Componente Principal App ---
 const App = () => {
   const [generalStats, setGeneralStats] = useState<StatisticsProps['generalStats']>(null);
@@ -310,7 +302,6 @@ const App = () => {
   const [initializationError, setInitializationError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log("[App useEffect] Iniciando efeito...");
     let emailForApi: string | null = null;
     const defaultMockUser = { email: "geisbelly19@gmail.com" };
 
@@ -325,63 +316,59 @@ const App = () => {
       } else {
         emailForApi = defaultMockUser.email;
       }
-    } catch (e) { /* ... (tratamento de erro localStorage) ... */ }
+    } catch (e) {
+      console.warn("Falha ao obter/analisar 'user' do localStorage.", e);
+      if (typeof window !== 'undefined' && !localStorage.getItem('user')) {
+        localStorage.setItem('user', JSON.stringify(defaultMockUser));
+      }
+      emailForApi = defaultMockUser.email;
+    }
 
     if (!emailForApi) {
-      setInitializationError("Email do utilizador não pôde ser determinado.");
-      setIsLoading(false); return;
+      setInitializationError("Email do utilizador não determinado.");
+      setIsLoading(false);
+      return;
     }
     setUserEmail(emailForApi);
-    console.log("[App useEffect] Email para API definido:", emailForApi);
 
     const fetchAllDashboardData = async (email: string) => {
       setIsLoading(true);
       setInitializationError(null);
-      console.log(`[fetchAllDashboardData] Iniciando busca de dados para: ${email}`);
       const baseUrl = "https://tarefas-banco-estruturado.onrender.com/tarefas";
 
-      const productivityUrl = `${baseUrl}/produtividade?userId=${email}`;
-      const statusUrl = `${baseUrl}/status?userId=${email}`;
-      const tagsUrl = `${baseUrl}/tags?userId=${email}`;
-
-      const hoje = new Date();
-      const seteDiasAtras = new Date();
-      seteDiasAtras.setDate(hoje.getDate() - 6); // Para incluir hoje, pegamos 6 dias atrás (total 7 dias)
-
-      const dataFimParaAPI = formatDataParaAPI(hoje);
-      const dataInicioParaAPI = formatDataParaAPI(seteDiasAtras);
-      const concluidasNoPeriodoUrl = `${baseUrl}/concluidas?userId=${email}&de=${dataInicioParaAPI}&ate=${dataFimParaAPI}`;
-
-      console.log("[fetchAllDashboardData] URLs a serem chamadas:", { productivityUrl, statusUrl, tagsUrl, concluidasNoPeriodoUrl });
-
       try {
-        const responses = await Promise.all([
+        // URLs das APIs - AJUSTE ESTAS URLs CONFORME NECESSÁRIO
+        const productivityUrl = `${baseUrl}/produtividade?userId=${email}`;
+        const statusUrl = `${baseUrl}/status?userId=${email}`;
+        const tagsUrl = `${baseUrl}/tags?userId=${email}`;
+        // Nova API para tarefas concluídas diariamente
+        const concluidasDiariamenteUrl = `${baseUrl}/concluidasDiariamente?userId=${email}&dias=7`;
+
+
+        const [productivityRes, statusRes, tagsRes, concluidasDiariamenteRes] = await Promise.all([
           fetch(productivityUrl),
           fetch(statusUrl),
           fetch(tagsUrl),
-          fetch(concluidasNoPeriodoUrl)
+          fetch(concluidasDiariamenteUrl)
         ]);
 
-        const [productivityRes, statusRes, tagsRes, concluidasNoPeriodoRes] = responses;
+        // Verificações de erro mais detalhadas
+        if (!productivityRes.ok) throw new Error(`Erro Produtividade (${productivityRes.status}): ${await productivityRes.text() || productivityRes.statusText}`);
+        if (!statusRes.ok) throw new Error(`Erro Status (${statusRes.status}): ${await statusRes.text() || statusRes.statusText}`);
+        if (!tagsRes.ok) throw new Error(`Erro Tags (${tagsRes.status}): ${await tagsRes.text() || tagsRes.statusText}`);
+        if (!concluidasDiariamenteRes.ok) throw new Error(`Erro Concluídas Diariamente (${concluidasDiariamenteRes.status}): ${await concluidasDiariamenteRes.text() || concluidasDiariamenteRes.statusText}`);
 
-        if (!productivityRes.ok) throw new Error(`Erro API Produtividade (${productivityRes.status}): ${await productivityRes.text() || productivityRes.statusText}`);
-        if (!statusRes.ok) throw new Error(`Erro API Status (${statusRes.status}): ${await statusRes.text() || statusRes.statusText}`);
-        if (!tagsRes.ok) throw new Error(`Erro API Tags (${tagsRes.status}): ${await tagsRes.text() || tagsRes.statusText}`);
-        if (!concluidasNoPeriodoRes.ok) throw new Error(`Erro API Concluídas no Período (${concluidasNoPeriodoRes.status}): ${await concluidasNoPeriodoRes.text() || concluidasNoPeriodoRes.statusText}`);
-
-        console.log("[fetchAllDashboardData] Todas as respostas OK. Convertendo para JSON...");
-
-        const productivityApiData: ApiProductivityData = await productivityRes.json();
+        const productivityData: ApiProductivityData = await productivityRes.json();
         const statusApiData: ApiStatusData = await statusRes.json();
         const tagsApiData: ApiTagData[] = await tagsRes.json();
-        const concluidasPorDiaApiData: ApiConcluidasPorDia = await concluidasNoPeriodoRes.json();
+        const concluidasDiariamenteApiData: ApiConcluidasDiariamenteData[] = await concluidasDiariamenteRes.json();
 
-        console.log("[fetchAllDashboardData] Dados JSON recebidos (brutos):", { productivityApiData, statusApiData, tagsApiData, concluidasPorDiaApiData });
-
-        // 1. Processar dados de status
+        // 1. Processar dados de status (para gráfico e contagens)
+        // **AJUSTE AS CHAVES (pendente, em_andamento, etc.) CONFORME A RESPOSTA REAL DA SUA API /status**
         const pending = statusApiData.pendente ?? 0;
-        const inProgress = statusApiData["em andamento"] ?? 0; // Usando a chave exata do seu log
+        const inProgress = statusApiData["em_andamento"] ?? statusApiData["em andamento"] ?? 0;
         const completed = statusApiData.concluida ?? 0;
+
         setStatusChartData([
           { name: "Pendentes", value: pending, fill: "#eab308" },
           { name: "Em Andamento", value: inProgress, fill: "#3b82f6" },
@@ -389,79 +376,58 @@ const App = () => {
         ]);
 
         // 2. Processar dados de tags (Top 5)
-        // **AJUSTE AQUI SE OS NOMES DOS CAMPOS FOREM DIFERENTES NA SUA API /tags**
-        const processedTags = (tagsApiData || [])
-            .map(item => ({ 
-                tag: String(item.value || "N/A"),      // Mudou de item.tag para item.value
-                count: Number(item.score || 0)         // Mudou de item.count para item.score
-            }))
-            .filter(item => item.count > 0)
+        // **AJUSTE AS CHAVES "tag" E "count" CONFORME A RESPOSTA REAL DA SUA API /tags**
+        setTagsChartData(
+          (tagsApiData || [])
+            .map(item => ({ tag: String(item.tag || "N/A"), count: Number(item.count || 0) }))
+            .filter(item => item.count > 0) // Opcional: mostrar apenas tags com contagem
             .sort((a, b) => b.count - a.count)
-            .slice(0, 5);
-        setTagsChartData(processedTags);
+            .slice(0, 5)
+        );
 
         // 3. Processar dados de atividade (tarefas CONCLUÍDAS nos últimos 7 dias)
-        const diasParaGrafico = Array.from({ length: 7 }, (_, i) => {
-            const data = new Date();
-            data.setDate(hoje.getDate() - i);
-            return data;
-        }).reverse(); // [7 dias atrás, ..., ontem, hoje]
+        // **VERIFIQUE SE A API /concluidasDiariamente RETORNA "dia" E "tarefasConcluidas"**
+        setActivityChartData(
+          (concluidasDiariamenteApiData || []).map(item => ({
+            dia: String(item.dia || "N/D"),
+            tarefasConcluidas: Number(item.tarefasConcluidas || 0)
+          }))
+        );
 
-        const processedActivity = diasParaGrafico.map(dataDia => {
-            const diaLabel = dataDia.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
-            const dataFormatadaChave = formatDataParaAPI(dataDia); // YYYY-MM-DD
-            const contagem = concluidasPorDiaApiData[dataFormatadaChave] ?? 0;
-            return {
-              dia: diaLabel,
-              tarefasConcluidas: Number(contagem)
-            };
-        });
-        setActivityChartData(processedActivity);
-        console.log("[fetchAllDashboardData] Atividade (Concluídas por Dia) Processada:", JSON.stringify(processedActivity));
+        // 4. Montar estatísticas gerais a partir da API /produtividade e /status
+        // **AJUSTE TODAS AS CHAVES (totalTarefasGeral, etc.) CONFORME A RESPOSTA REAL DA API /produtividade**
+        const totalTasks = productivityData.totalTarefasGeral ?? (pending + inProgress + completed);
 
-        // 4. Montar estatísticas gerais
-        const totalTasksAtivas = pending + inProgress + completed;
-
-        // Tarefas criadas hoje
-        const hojeFormatadoChave = `tarefas_criadas_${formatDataParaAPI(hoje)}`;
-        const tarefasCriadasHojeValor = productivityApiData[hojeFormatadoChave];
-        const tasksCreatedToday = typeof tarefasCriadasHojeValor === 'string' 
-            ? parseInt(tarefasCriadasHojeValor, 10) 
-            : (typeof tarefasCriadasHojeValor === 'number' ? tarefasCriadasHojeValor : 0);
-        
-        if (isNaN(tasksCreatedToday)) {
-            console.warn(`[fetchAllDashboardData] Valor para '${hojeFormatadoChave}' não é um número válido:`, tarefasCriadasHojeValor);
-        }
-
-
-        const finalGeneralStats = {
-          totalTasks: totalTasksAtivas,
+        setGeneralStats({
+          totalTasks: totalTasks,
           pendingTasks: pending,
           inProgressTasks: inProgress,
-          completedTasks: completed, // Do /status (ativas concluídas)
-          totalComments: 0, // API de produtividade não forneceu no exemplo
-          uniqueTags: processedTags.length, // Número de tags no top (não o total geral)
-          avgCompletionTime: formatMillisecondsToReadable(productivityApiData.tempo_medio_conclusao_ms),
-          tasksCreatedToday: isNaN(tasksCreatedToday) ? 0 : tasksCreatedToday,
-          weeklyCompletionRate: productivityApiData.taxaConclusaoSemanal ?? 0, // Espera vir da API
-        };
-        setGeneralStats(finalGeneralStats);
-        console.log("[fetchAllDashboardData] Estatísticas Gerais Finais:", JSON.stringify(finalGeneralStats));
+          completedTasks: completed,
+          totalComments: productivityData.totalComentarios ?? 0,
+          uniqueTags: productivityData.totalTagsUnicas ?? 0, // Ou tagsApiData.length se /tags retornar todas as únicas
+          avgCompletionTime: productivityData.tempoMedioConclusao ?? "N/A",
+          tasksCreatedToday: productivityData.tarefasCriadasHoje ?? 0,
+          weeklyCompletionRate: productivityData.taxaConclusaoSemanal ?? 0,
+        });
 
       } catch (error) {
-        console.error("[fetchAllDashboardData] ERRO DURANTE FETCH OU PROCESSAMENTO:", error);
-        setInitializationError((error as Error).message || "Erro desconhecido ao buscar ou processar dados.");
+        console.error("Erro detalhado ao obter dados do dashboard:", error);
+        setInitializationError((error as Error).message || "Erro ao carregar dados.");
+        // Limpar estados para evitar mostrar dados inconsistentes
+        setGeneralStats(null);
+        setStatusChartData([]);
+        setActivityChartData([]);
+        setTagsChartData([]);
       } finally {
-        console.log("[fetchAllDashboardData] Bloco FINALLY. Definindo isLoading para false.");
         setIsLoading(false);
       }
     };
 
     fetchAllDashboardData(emailForApi);
 
-  }, []);
+  }, []); // Executa apenas na montagem
 
-  if (isLoading) { /* ... (tela de loading) ... */ 
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white p-4">
         <svg className="animate-spin h-12 w-12 text-blue-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -473,14 +439,15 @@ const App = () => {
       </div>
     );
   }
-   if (initializationError) { /* ... (tela de erro) ... */ 
+
+   if (initializationError) {
         return (
             <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white p-4 text-center">
                 <Info className="w-16 h-16 mb-4 text-red-500" />
                 <h2 className="text-2xl font-semibold text-gray-300 mb-2">Erro ao Carregar Dados</h2>
                 <p className="text-gray-400 mb-1 max-w-md">{initializationError}</p>
                 {userEmail && <p className="text-sm text-gray-500 mt-2">Utilizador: <code className="bg-gray-700 p-1 rounded">{userEmail}</code></p>}
-                 <p className="text-xs text-gray-600 mt-4">Verifique a consola do navegador (F12) para detalhes técnicos e confirme se as APIs estão respondendo corretamente.</p>
+                 <p className="text-xs text-gray-600 mt-4">Tente recarregar a página. Verifique a consola para detalhes técnicos.</p>
             </div>
         );
     }
