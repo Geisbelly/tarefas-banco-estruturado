@@ -300,167 +300,131 @@ export async function atualizarTarefa(id, updates) {
       return false;
     }
 
+    // Filtra _id e id para não serem setados diretamente
     const dadosFiltrados = Object.fromEntries(
       Object.entries(updates).filter(([chave]) => chave !== "_id" && chave !== "id")
     );
 
-    // Determinar dataConclusao com base na mudança de status
-    const statusAntigo = tarefaAtual.status;
-    const statusNovoProposto = updates.status; // Pode ser undefined se não estiver no updates
-    let dataConclusaoParaSetar = tarefaAtual.dataConclusao; // Mantém a atual por padrão
-
-    if (statusNovoProposto) {
-      if (statusNovoProposto === "concluida" && statusAntigo !== "concluida") {
-        dataConclusaoParaSetar = new Date();
-        dadosFiltrados.dataConclusao = dataConclusaoParaSetar;
-      } else if (statusAntigo === "concluida" && statusNovoProposto !== "concluida") {
-        dataConclusaoParaSetar = null;
-        dadosFiltrados.dataConclusao = dataConclusaoParaSetar;
+    // Se dataConclusao está sendo passada explicitamente como null, mas o status é 'concluida',
+    // ou se o status está mudando para 'concluida', definir dataConclusao para new Date().
+    if (updates.status) {
+      if (updates.status === "concluida" && tarefaAtual.status !== "concluida") {
+        dadosFiltrados.dataConclusao = new Date();
+      } else if (tarefaAtual.status === "concluida" && updates.status !== "concluida") {
+        dadosFiltrados.dataConclusao = null;
       }
-    } else if (dadosFiltrados.hasOwnProperty('dataConclusao')) {
-      // Se o status não está mudando, mas dataConclusao está sendo alterada explicitamente
-      dataConclusaoParaSetar = dadosFiltrados.dataConclusao;
     }
-    
+
+
     const result = await tarefasCollection.updateOne(
       { _id: new ObjectId(id) },
       { $set: dadosFiltrados }
     );
 
     // --- Lógica de Atualização de Métricas ---
+
     const criadorId = tarefaAtual.criador;
-    const statusFinalDaTarefa = updates.status || statusAntigo; // O status efetivo após o update
-    const tagsAtuaisDaTarefa = updates.tags || tarefaAtual.tags || []; // Tags efetivas após o update
-    const tagsAntigasDaTarefa = tarefaAtual.tags || [];
-
-    // Usuários impactados: criador + todos os colaboradores (antigos e novos, se houver mudança)
-    // Se a lista de colaboradores mudou, precisamos tratar adicionados e removidos.
-    // Se apenas o status ou tags mudaram, precisamos atualizar para os colaboradores existentes.
-
-    let todosColaboradoresImpactados = new Set(tarefaAtual.colaboradores || []);
-    if (updates.hasOwnProperty('colaboradores')) {
-        (updates.colaboradores || []).forEach(colab => todosColaboradoresImpactados.add(colab));
-    }
-    // Adiciona o criador para garantir que ele seja processado se também for colaborador,
-    // mas a lógica principal para o criador é separada para clareza.
-    // No entanto, para simplificar o loop, podemos incluí-lo e depois pular se for o criador.
-    // Ou, manter a lógica separada para o criador e depois iterar nos colaboradores.
+    const statusAntigo = tarefaAtual.status;
+    const statusNovo = updates.status || statusAntigo; // Se não houver update de status, usa o antigo
 
     // 1. ATUALIZAR MÉTRICAS DO CRIADOR
+    // Se o status mudou para o criador
     if (updates.status && updates.status !== statusAntigo) {
-      console.log(`[CRIADOR: ${criadorId}] Status alterado: "${statusAntigo}" -> "${statusFinalDaTarefa}" (Tarefa: ${id})`);
-      await atualizarContadorStatus(criadorId, statusFinalDaTarefa, 1, statusAntigo);
+      console.log(`Status alterado para criador ${criadorId}: de "${statusAntigo}" para "${statusNovo}" na tarefa ${id}`);
+      await atualizarContadorStatus(criadorId, statusNovo, 1, statusAntigo);
 
-      if (statusFinalDaTarefa === "concluida") {
-        const ms = (dataConclusaoParaSetar || new Date()) - new Date(tarefaAtual.dataCriacao);
-        await atualizarEstatisticasProdutividade(criadorId, ms, false, false, true);
-        await registrarConclusaoPorData(criadorId, formatDataParaAPI(dataConclusaoParaSetar || new Date()));
-      } else if (statusAntigo === "concluida") {
+      if (statusNovo === "concluida" && statusAntigo !== "concluida") {
+        console.log(`Registrando conclusão para criador ${criadorId}`);
+        const ms = new Date() - new Date(tarefaAtual.dataCriacao);
+        await atualizarEstatisticasProdutividade(criadorId, ms, false, false, true); // tempo, isDecremento, isNova, isConcluida
+        await registrarConclusaoPorData(criadorId, formatDataParaAPI(new Date()));
+      } else if (statusAntigo === "concluida" && statusNovo !== "concluida") {
+        console.log(`Removendo conclusão para criador ${criadorId}`);
+        // Nota: O tempo para 'decrementar' produtividade se basearia na dataConclusao anterior
         const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
-        const ms = new Date(tarefaAtual.dataCriacao) - dataConclusaoAnterior;
-        await atualizarEstatisticasProdutividade(criadorId, ms, true, false, false);
+        const ms = new Date(tarefaAtual.dataCriacao) - dataConclusaoAnterior; // Isso resultará em negativo, sua função deve tratar
+        await atualizarEstatisticasProdutividade(criadorId, ms, true, false, false); // tempo, isDecremento, isNova, isConcluida (não é mais)
         await removerConclusaoPorData(criadorId, formatDataParaAPI(dataConclusaoAnterior));
       }
     }
+
+    // Se as tags foram atualizadas para o criador
     if (updates.hasOwnProperty('tags')) {
-      console.log(`[CRIADOR: ${criadorId}] Tags alteradas (Tarefa: ${id})`);
-      await atualizarRankingTags(criadorId, tagsAtuaisDaTarefa, tagsAntigasDaTarefa);
+      console.log(`Atualizando tags para criador ${criadorId}`);
+      await atualizarRankingTags(criadorId, updates.tags || [], tarefaAtual.tags || []);
     }
 
     // 2. ATUALIZAR MÉTRICAS DE COLABORADORES
-    const colaboradoresAntigosSet = new Set(tarefaAtual.colaboradores || []);
-    const colaboradoresNovosSet = new Set(updates.colaboradores || []); // Se 'colaboradores' não estiver em updates, este será vazio
-
-    // Identificar quem são os colaboradores *após* esta atualização
-    let colaboradoresEfetivosSet = new Set(colaboradoresAntigosSet);
     if (updates.hasOwnProperty('colaboradores')) {
-        colaboradoresEfetivosSet = new Set(colaboradoresNovosSet);
-    }
-    
-    // Processar colaboradores que foram ADICIONADOS
-    if (updates.hasOwnProperty('colaboradores')) {
-        for (const colabId of colaboradoresNovosSet) {
-            if (!colaboradoresAntigosSet.has(colabId) && colabId !== criadorId) {
-                console.log(`[COLAB ADICIONADO: ${colabId}] Associado à tarefa ${id}. Status: ${statusFinalDaTarefa}`);
-                await atualizarRankingTags(colabId, tagsAtuaisDaTarefa, []); // Adiciona todas as tags atuais da tarefa
-                await atualizarContadorStatus(colabId, statusFinalDaTarefa, 1);
+      const colaboradoresAntigos = new Set(tarefaAtual.colaboradores || []);
+      const colaboradoresNovos = new Set(updates.colaboradores || []);
 
-                if (statusFinalDaTarefa === "concluida") {
-                    const tempoConclusao = dataConclusaoParaSetar || new Date();
-                    const ms = tempoConclusao - new Date(tarefaAtual.dataCriacao);
-                    await atualizarEstatisticasProdutividade(colabId, ms, false, true, true);
-                    await registrarConclusaoPorData(colabId, formatDataParaAPI(tempoConclusao));
-                } else {
-                    await atualizarEstatisticasProdutividade(colabId, null, false, true, false);
-                }
-            }
+      // Colaboradores Adicionados
+      for (const colabId of colaboradoresNovos) {
+        if (!colaboradoresAntigos.has(colabId) && colabId !== criadorId) {
+          console.log(`Colaborador ${colabId} ADICIONADO à tarefa ${id}. Atualizando métricas.`);
+          await atualizarRankingTags(colabId, dadosFiltrados.tags || tarefaAtual.tags || []); // Usa as tags atuais da tarefa
+          await atualizarContadorStatus(colabId, statusNovo, 1); // Adiciona ao status atual da tarefa
+
+          // Se a tarefa já está concluída ou sendo concluída nesta atualização
+          if (statusNovo === "concluida") {
+            const tempoConclusao = dadosFiltrados.dataConclusao || (tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date());
+            const ms = tempoConclusao - new Date(tarefaAtual.dataCriacao);
+            await atualizarEstatisticasProdutividade(colabId, ms, false, true, true); // tempo, isDecremento, isNovaTarefaAssociada, isConcluida
+            await registrarConclusaoPorData(colabId, formatDataParaAPI(tempoConclusao));
+          } else {
+            // Apenas marca que uma nova tarefa foi associada (não criada por ele, nem concluída por ele ainda)
+             await atualizarEstatisticasProdutividade(colabId, null, false, true, false);
+          }
         }
+      }
+
+      // Colaboradores Removidos
+      for (const colabId of colaboradoresAntigos) {
+        if (!colaboradoresNovos.has(colabId) && colabId !== criadorId) {
+          console.log(`Colaborador ${colabId} REMOVIDO da tarefa ${id}. Decrementando métricas.`);
+          await atualizarRankingTags(colabId, [], dadosFiltrados.tags || tarefaAtual.tags || []); // Remove as tags antigas da tarefa
+          await atualizarContadorStatus(colabId, statusAntigo, -1); // Remove do status antigo da tarefa
+
+          // Se a tarefa estava concluída quando ele foi removido
+          if (statusAntigo === "concluida") {
+             const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
+             const ms = new Date(tarefaAtual.dataCriacao) - dataConclusaoAnterior;
+            await atualizarEstatisticasProdutividade(colabId, ms, true, false, false); // tempo, isDecremento, isNova, isConcluida (não é mais para ele)
+            await removerConclusaoPorData(colabId, formatDataParaAPI(dataConclusaoAnterior));
+          } else {
+            // Se a tarefa não estava concluída, apenas decrementa a associação
+            // O "isNova" para decremento pode não fazer sentido, ajuste sua função de estatísticas
+            await atualizarEstatisticasProdutividade(colabId, null, true, false, false); // (tempo=null, isDecremento=true, isNova=false, isConcluida=false)
+          }
+        }
+      }
+    } else if (updates.status && updates.status !== statusAntigo) {
+      const colaboradoresAtuais = new Set(tarefaAtual.colaboradores || []);
+      for (const colabId of colaboradoresAtuais) {
+        if (colabId !== criadorId) {
+          console.log(`Status da tarefa ${id} alterado para ${statusNovo}. Atualizando para colaborador ${colabId}.`);
+          await atualizarContadorStatus(colabId, statusNovo, 1, statusAntigo);
+
+          if (statusNovo === "concluida" && statusAntigo !== "concluida") {
+            const ms = (dadosFiltrados.dataConclusao || new Date()) - new Date(tarefaAtual.dataCriacao);
+            await atualizarEstatisticasProdutividade(colabId, ms, false, false, true);
+            await registrarConclusaoPorData(colabId, formatDataParaAPI(dadosFiltrados.dataConclusao || new Date()));
+          } else if (statusAntigo === "concluida" && statusNovo !== "concluida") {
+            const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
+            const ms = new Date(tarefaAtual.dataCriacao) - dataConclusaoAnterior;
+            await atualizarEstatisticasProdutividade(colabId, ms, true, false, false);
+            await removerConclusaoPorData(colabId, formatDataParaAPI(dataConclusaoAnterior));
+          }
+        }
+      }
     }
 
-    // Processar colaboradores que foram REMOVIDOS
-    if (updates.hasOwnProperty('colaboradores')) {
-        for (const colabId of colaboradoresAntigosSet) {
-            if (!colaboradoresNovosSet.has(colabId) && colabId !== criadorId) {
-                console.log(`[COLAB REMOVIDO: ${colabId}] Desassociado da tarefa ${id}. Status antigo: ${statusAntigo}`);
-                await atualizarRankingTags(colabId, [], tagsAntigasDaTarefa); // Remove todas as tags antigas da tarefa
-                await atualizarContadorStatus(colabId, statusAntigo, -1);
-
-                if (statusAntigo === "concluida") {
-                    const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
-                    const ms = new Date(tarefaAtual.dataCriacao) - dataConclusaoAnterior;
-                    await atualizarEstatisticasProdutividade(colabId, ms, true, false, false);
-                    await removerConclusaoPorData(colabId, formatDataParaAPI(dataConclusaoAnterior));
-                } else {
-                    await atualizarEstatisticasProdutividade(colabId, null, true, false, false);
-                }
-            }
-        }
-    }
-    
-    // Processar colaboradores que PERMANECERAM na tarefa, mas o status ou tags da tarefa mudaram
-    // (e não foram tratados como adicionados/removidos)
-    for (const colabId of colaboradoresEfetivosSet) {
-        if (colabId === criadorId) continue; // Criador já tratado
-
-        // Se este colaborador não foi recém-adicionado (já estava na lista antiga)
-        // E a lista de colaboradores não foi o único update (ou seja, status ou tags também podem ter mudado)
-        let colaboradorJaExistente = true;
-        if(updates.hasOwnProperty('colaboradores')){
-            colaboradorJaExistente = colaboradoresAntigosSet.has(colabId);
-        }
-
-
-        if (colaboradorJaExistente) {
-            // Mudança de status para colaborador existente
-            if (updates.status && updates.status !== statusAntigo) {
-                console.log(`[COLAB EXISTENTE: ${colabId}] Status alterado: "${statusAntigo}" -> "${statusFinalDaTarefa}" (Tarefa: ${id})`);
-                await atualizarContadorStatus(colabId, statusFinalDaTarefa, 1, statusAntigo);
-
-                if (statusFinalDaTarefa === "concluida") {
-                    const ms = (dataConclusaoParaSetar || new Date()) - new Date(tarefaAtual.dataCriacao);
-                    await atualizarEstatisticasProdutividade(colabId, ms, false, false, true);
-                    await registrarConclusaoPorData(colabId, formatDataParaAPI(dataConclusaoParaSetar || new Date()));
-                } else if (statusAntigo === "concluida") {
-                    const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
-                    const ms = new Date(tarefaAtual.dataCriacao) - dataConclusaoAnterior;
-                    await atualizarEstatisticasProdutividade(colabId, ms, true, false, false);
-                    await removerConclusaoPorData(colabId, formatDataParaAPI(dataConclusaoAnterior));
-                }
-            }
-
-            // Mudança de tags para colaborador existente (que não seja o criador)
-            // Apenas se a lista de colaboradores NÃO foi o que mudou, ou se ele é um colaborador que permaneceu.
-            if (updates.hasOwnProperty('tags') && (!updates.hasOwnProperty('colaboradores') || colaboradoresNovosSet.has(colabId))) {
-                 console.log(`[COLAB EXISTENTE: ${colabId}] Tags alteradas (Tarefa: ${id})`);
-                await atualizarRankingTags(colabId, tagsAtuaisDaTarefa, tagsAntigasDaTarefa);
-            }
-        }
-    }
 
     return result.modifiedCount > 0;
   } catch (err) {
     console.error(`Erro ao atualizar tarefa com ID ${id}:`, err);
-    return false; 
+    return false;
   } finally {
     if (tarefasCollection) await closeMongoDBConnection();
   }
