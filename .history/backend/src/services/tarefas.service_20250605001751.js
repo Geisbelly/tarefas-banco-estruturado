@@ -284,7 +284,7 @@ export async function atualizarTarefa(id, updates) {
       // Tarefa voltando para pendente
       else if (tarefaAtual.status === "concluida" && updates.status !== "concluida") {
         console.log('Decrementando estatísticas');
-        const ms = new Date(tarefaAtual.dataCriacao) - new Date(tarefaAtual.dataConclusao);
+        const ms = new Date(tarefaAtual.dataConclusao) - new Date(tarefaAtual.dataCriacao);
         await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms, true); // decrementa
         await registrarConclusaoPorData(tarefaAtual.criador, tarefaAtual.dataConclusao); // remove de concluídos
       }

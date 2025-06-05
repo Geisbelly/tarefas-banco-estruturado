@@ -270,25 +270,25 @@ export async function atualizarTarefa(id, updates) {
 
     // Atualiza contadores no Redis se status mudou
     if (updates.status && updates.status !== tarefaAtual.status) {
-      console.log(`Status alterado de "${tarefaAtual.status}" para "${updates.status}" para tarefa ${id}`);
-      await atualizarContadorStatus(tarefaAtual.criador, updates.status, 1, tarefaAtual.status);
+  console.log(`Status alterado de "${tarefaAtual.status}" para "${updates.status}" para tarefa ${id}`);
+  await atualizarContadorStatus(tarefaAtual.criador, updates.status, 1, tarefaAtual.status);
 
-      // Tarefa sendo concluída agora
-      if (updates.status === "concluida" && tarefaAtual.status !== "concluida") {
-        console.log('Incrementando estatísticas');
-        const ms = new Date() - new Date(tarefaAtual.dataCriacao);
-        await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms); // incrementa
-        await registrarConclusaoPorData(tarefaAtual.criador);
-      }
+  // Tarefa sendo concluída agora
+  if (updates.status === "concluida" && tarefaAtual.status !== "concluida") {
+    console.log('Incrementando estatísticas');
+    const ms = new Date() - new Date(tarefaAtual.dataCriacao);
+    await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms); // incrementa
+    await registrarConclusaoPorData(tarefaAtual.criador);
+  }
 
-      // Tarefa voltando para pendente
-      else if (tarefaAtual.status === "concluida" && updates.status !== "concluida") {
-        console.log('Decrementando estatísticas');
-        const ms = new Date(tarefaAtual.dataCriacao) - new Date(tarefaAtual.dataConclusao);
-        await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms, true); // decrementa
-        await registrarConclusaoPorData(tarefaAtual.criador, tarefaAtual.dataConclusao); // remove de concluídos
-      }
-    }
+  // Tarefa voltando para pendente
+  else if (tarefaAtual.status === "concluida" && updates.status !== "concluida") {
+    console.log('Decrementando estatísticas');
+    const ms = new Date(tarefaAtual.dataConclusao) - new Date(tarefaAtual.dataCriacao);
+    await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms, true); // decrementa
+    await registrarConclusaoPorData(tarefaAtual.criador, tarefaAtual.dataConclusao); // remove de concluídos
+  }
+}
 
 
     if (updates.hasOwnProperty('tags')) {
