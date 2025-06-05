@@ -6,8 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Trash2, MessageSquare, Calendar, Tag, User, Edit2 } from "lucide-react";
 import { Task, Comment } from "@/types/task";
-import { useState } from "react";
-import { format } from "date-fns";
+import { useEffect, useState } from "react";
+import { format, set } from "date-fns";
 
 interface TaskCardProps {
   task: Task;
@@ -26,6 +26,10 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask, onAddComment, onDel
   const handleStatusChange = (newStatus: Task['status']) => {
     onUpdateTask(task._id, { status: newStatus });
   };
+
+  useEffect(()=>{
+    setCommentAuthor(JSON.parse(localStorage.getItem('user')).nome)
+  },[])
 
   const handleAddComment = () => {
     if (newComment.trim() && commentAuthor.trim()) {
@@ -140,12 +144,12 @@ export const TaskCard = ({ task, onUpdateTask, onDeleteTask, onAddComment, onDel
             ))}
             
             <div className="space-y-2">
-              <Input
+              {/* <Input
                 placeholder="Seu nome"
                 value={commentAuthor}
                 onChange={(e) => setCommentAuthor(e.target.value)}
                 className="bg-gray-800/50 border-gray-600 text-white"
-              />
+              /> */}
               <div className="flex gap-2">
                 <Textarea
                   placeholder="Adicionar comentário..."
