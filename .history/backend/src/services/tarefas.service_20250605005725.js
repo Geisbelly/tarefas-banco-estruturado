@@ -64,7 +64,7 @@ export async function criarTarefa(
       status: (status) || "pendente",
       criador,
       colaboradores,
-      dataConclusao: status === 'concluido' ? new Date() : null, // Inicialmente nulo
+      dataConclusao: status === '', // Inicialmente nulo
       tags,
       comentarios: []
     };
@@ -73,10 +73,9 @@ export async function criarTarefa(
     if(status === "concluida") {
       console.log("Registrando conclusão diária e atualizando estatísticas de produtividade...");
       await registrarConclusaoPorData(criador);
-      userId, tempoConclusaoMs = null, atualizarConclusao=false, criada=false, decremet=false
-      await atualizarEstatisticasProdutividade(criador,0,false,true,false);
-    }else{
-      await atualizarEstatisticasProdutividade(criador,null,false,true,false);
+      //userId, tempoConclusaoMs = null, atualizarConclusao=false, criada=false, decremet=false
+      const atualizar = 
+      await atualizarEstatisticasProdutividade(criador,null,false,true);
     }
     await atualizarRankingTags(criador, tags);
     await atualizarContadorStatus(criador, status, 1);

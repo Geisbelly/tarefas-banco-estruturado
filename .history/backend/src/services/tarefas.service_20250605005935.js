@@ -73,9 +73,6 @@ export async function criarTarefa(
     if(status === "concluida") {
       console.log("Registrando conclusão diária e atualizando estatísticas de produtividade...");
       await registrarConclusaoPorData(criador);
-      userId, tempoConclusaoMs = null, atualizarConclusao=false, criada=false, decremet=false
-      await atualizarEstatisticasProdutividade(criador,0,false,true,false);
-    }else{
       await atualizarEstatisticasProdutividade(criador,null,false,true,false);
     }
     await atualizarRankingTags(criador, tags);
