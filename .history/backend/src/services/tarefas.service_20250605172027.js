@@ -555,10 +555,10 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
       await atualizarRankingTags(colaborador, tagsNovas, []);
       if (statusNovo === "concluida") {
         const ms = new Date() - new Date(tarefaAtual.dataCriacao);
-        await atualizarEstatisticasProdutividade(colaborador, ms,false,true,false);
+        await atualizarEstatisticasProdutividade(colaborador, ms,false,true);
         await registrarConclusaoPorData(colaborador);
       }else{
-        await atualizarEstatisticasProdutividade(colaborador, 0,false,true,false);
+        await atualizarEstatisticasProdutividade(colaborador, 0,false,true);
       }
     }
 
@@ -569,10 +569,10 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
       await atualizarRankingTags(colaborador, [], tagsAntigas);
       if (statusAntigo === "concluida") {
         const ms =  new Date(tarefaAtual.dataCriacao) - new Date(tarefaAtual.dataConclusao);
-        await atualizarEstatisticasProdutividade(colaborador, -ms, true,false,true,tarefaAtual.dataCriacao);
+        await atualizarEstatisticasProdutividade(colaborador, -ms, true,false,true);
         await reverterConclusaoTarefa(colaborador, tarefaAtual.dataConclusao, ms);
       }else{
-        await atualizarEstatisticasProdutividade(colaborador, 0, null,false,true,tarefaAtual.dataCriacao);
+        await atualizarEstatisticasProdutividade(colaborador, 0, false,false,true);
       }
     }
 
@@ -858,33 +858,35 @@ export async function atualizarRankingTags(userId, tagsNovas = [], tagsAntigas =
   }
 }
 
-export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoMs = null, atualizarConclusao=false, criada=false, decremet=false, data) {
+export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoMs = null, atualizarConclusao = false, criada = false, decremet = false) {
   const chave = `user:${userId}:stats:productivity`;
 
   try {
-    const hoje = new Date().toISOString().split("T")[0];
+    const hoje = new Date();
+    const dataISO = hoje.toISOString().split("T")[0];
 
-    // Incrementa contador de tarefas criadas hoje
-    if(criada){
-      await redis.hIncrBy(chave, `tarefas_criadas_${hoje}`, 1);
-    } else if (decremet){
-      await redis.hIncrBy(chave, `tarefas_criadas_${data}`, -1);
+    // ======== Tarefas Criadas no Dia ========
+    if (criada) {
+      await redis.hIncrBy(chave, `tarefas_criadas_${dataISO}`, 1);
+    } else if (decremet) {
+      await redis.hIncrBy(chave, `tarefas_criadas_${dataISO}`, -1);
     }
-    
 
+    // ======== Tarefas Concluídas no Dia ========
     if (tempoConclusaoMs !== null) {
       const totalTempoKey = `${chave}:soma_tempo_conclusao`;
       const totalConcluidasKey = `${chave}:qtd_concluidas`;
 
-      // Incrementa valores
       await redis.incrBy(totalTempoKey, tempoConclusaoMs);
-      if(atualizarConclusao){
-        await redis.incrBy(totalConcluidasKey,-1)
-      }else if(!atualizarConclusao){
-        await redis.incr(totalConcluidasKey)
+
+      if (atualizarConclusao) {
+        await redis.incrBy(totalConcluidasKey, -1);
+        await redis.hIncrBy(chave, `tarefas_concluidas_${dataISO}`, -1);
+      } else {
+        await redis.incr(totalConcluidasKey);
+        await redis.hIncrBy(chave, `tarefas_concluidas_${dataISO}`, 1);
       }
 
-      // Recupera os valores (e faz fallback para 0 caso sejam null)
       const somaStr = await redis.get(totalTempoKey);
       const qtdStr = await redis.get(totalConcluidasKey);
 
@@ -897,11 +899,47 @@ export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoM
       }
     }
 
+    // ======== Taxa de Conclusão Diária ========
+    const criadasHojeStr = await redis.hGet(chave, `tarefas_criadas_${dataISO}`);
+    const concluidasHojeStr = await redis.hGet(chave, `tarefas_concluidas_${dataISO}`);
+
+    const criadasHoje = parseInt(criadasHojeStr || "0");
+    const concluidasHoje = parseInt(concluidasHojeStr || "0");
+
+    const taxaDia = criadasHoje > 0 ? (concluidasHoje / criadasHoje).toFixed(2) : "0.00";
+    await redis.hSet(chave, `taxa_conclusao_${dataISO}`, taxaDia);
+
+    // ======== Taxa de Conclusão Semanal ========
+    const datasUltimos7Dias = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(hoje.getDate() - i);
+      return d.toISOString().split("T")[0];
+    });
+
+    let totalCriadasSemana = 0;
+    let totalConcluidasSemana = 0;
+
+    for (const dia of datasUltimos7Dias) {
+      const c = await redis.hGet(chave, `tarefas_criadas_${dia}`);
+      const f = await redis.hGet(chave, `tarefas_concluidas_${dia}`);
+      totalCriadasSemana += parseInt(c || "0");
+      totalConcluidasSemana += parseInt(f || "0");
+    }
+
+    const taxaSemanal = totalCriadasSemana > 0
+      ? (totalConcluidasSemana / totalCriadasSemana).toFixed(2)
+      : "0.00";
+
+    await redis.hSet(chave, `taxa_conclusao_semanal`, taxaSemanal);
+
     console.log(`📊 Estatísticas atualizadas para ${userId}`);
+    console.log(`📅 Hoje: ${dataISO} | Dia: ${taxaDia} | Semana: ${taxaSemanal}`);
+
   } catch (error) {
     console.error(`❌ Erro ao atualizar estatísticas de produtividade:`, error);
   }
 }
+
 
 
 export async function reverterConclusaoTarefa(userId, dataConclusao, tempoConclusaoMs) {

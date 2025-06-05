@@ -558,7 +558,7 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
         await atualizarEstatisticasProdutividade(colaborador, ms,false,true,false);
         await registrarConclusaoPorData(colaborador);
       }else{
-        await atualizarEstatisticasProdutividade(colaborador, 0,false,true,false);
+        await atualizarEstatisticasProdutividade(colaborador, 0,false,true);
       }
     }
 

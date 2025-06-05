@@ -555,10 +555,10 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
       await atualizarRankingTags(colaborador, tagsNovas, []);
       if (statusNovo === "concluida") {
         const ms = new Date() - new Date(tarefaAtual.dataCriacao);
-        await atualizarEstatisticasProdutividade(colaborador, ms,false,true,false);
+        await atualizarEstatisticasProdutividade(colaborador, ms,false,true);
         await registrarConclusaoPorData(colaborador);
       }else{
-        await atualizarEstatisticasProdutividade(colaborador, 0,false,true,false);
+        await atualizarEstatisticasProdutividade(colaborador, 0,false,true);
       }
     }
 

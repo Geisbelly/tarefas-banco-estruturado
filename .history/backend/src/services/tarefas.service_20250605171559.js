@@ -555,10 +555,10 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
       await atualizarRankingTags(colaborador, tagsNovas, []);
       if (statusNovo === "concluida") {
         const ms = new Date() - new Date(tarefaAtual.dataCriacao);
-        await atualizarEstatisticasProdutividade(colaborador, ms,false,true,false);
+        await atualizarEstatisticasProdutividade(colaborador, ms,false,true);
         await registrarConclusaoPorData(colaborador);
       }else{
-        await atualizarEstatisticasProdutividade(colaborador, 0,false,true,false);
+        await atualizarEstatisticasProdutividade(colaborador, 0,false,true);
       }
     }
 
@@ -569,10 +569,10 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
       await atualizarRankingTags(colaborador, [], tagsAntigas);
       if (statusAntigo === "concluida") {
         const ms =  new Date(tarefaAtual.dataCriacao) - new Date(tarefaAtual.dataConclusao);
-        await atualizarEstatisticasProdutividade(colaborador, -ms, true,false,true,tarefaAtual.dataCriacao);
+        await atualizarEstatisticasProdutividade(colaborador, -ms, true,false,true);
         await reverterConclusaoTarefa(colaborador, tarefaAtual.dataConclusao, ms);
       }else{
-        await atualizarEstatisticasProdutividade(colaborador, 0, null,false,true,tarefaAtual.dataCriacao);
+        await atualizarEstatisticasProdutividade(colaborador, 0, false,false,true);
       }
     }
 
@@ -858,7 +858,7 @@ export async function atualizarRankingTags(userId, tagsNovas = [], tagsAntigas =
   }
 }
 
-export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoMs = null, atualizarConclusao=false, criada=false, decremet=false, data) {
+export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoMs = null, atualizarConclusao=false, criada=false, decremet=false) {
   const chave = `user:${userId}:stats:productivity`;
 
   try {
@@ -868,7 +868,7 @@ export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoM
     if(criada){
       await redis.hIncrBy(chave, `tarefas_criadas_${hoje}`, 1);
     } else if (decremet){
-      await redis.hIncrBy(chave, `tarefas_criadas_${data}`, -1);
+      await redis.hIncrBy(chave, `tarefas_criadas_${hoje}`, -1);
     }
     
 

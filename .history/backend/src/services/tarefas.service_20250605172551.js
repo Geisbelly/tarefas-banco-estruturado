@@ -555,15 +555,16 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
       await atualizarRankingTags(colaborador, tagsNovas, []);
       if (statusNovo === "concluida") {
         const ms = new Date() - new Date(tarefaAtual.dataCriacao);
-        await atualizarEstatisticasProdutividade(colaborador, ms,false,true,false);
+        await atualizarEstatisticasProdutividade(colaborador, ms,false,true);
         await registrarConclusaoPorData(colaborador);
       }else{
-        await atualizarEstatisticasProdutividade(colaborador, 0,false,true,false);
+        await atualizarEstatisticasProdutividade(colaborador, 0,false,true);
       }
     }
 
     // --- Colaboradores removidos ---
     for (const colaborador of removidos) {
+      
       console.log(`Removendo métricas de colaborador: ${colaborador}`);
       await atualizarContadorStatus(colaborador, statusAntigo, -1);
       await atualizarRankingTags(colaborador, [], tagsAntigas);

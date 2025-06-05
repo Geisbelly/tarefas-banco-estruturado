@@ -549,16 +549,13 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
 
     // --- Colaboradores adicionados ---
     for (const colaborador of adicionados) {
-      userId, tempoConclusaoMs = null, atualizarConclusao=false, criada=false, decremet=false
       console.log(`Incrementando métricas para novo colaborador: ${colaborador}`);
       await atualizarContadorStatus(colaborador, statusNovo, 1);
       await atualizarRankingTags(colaborador, tagsNovas, []);
       if (statusNovo === "concluida") {
         const ms = new Date() - new Date(tarefaAtual.dataCriacao);
-        await atualizarEstatisticasProdutividade(colaborador, ms,false,true,false);
+        await atualizarEstatisticasProdutividade(colaborador, ms);
         await registrarConclusaoPorData(colaborador);
-      }else{
-        await atualizarEstatisticasProdutividade(colaborador, 0,false,true,false);
       }
     }
 
@@ -568,11 +565,9 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
       await atualizarContadorStatus(colaborador, statusAntigo, -1);
       await atualizarRankingTags(colaborador, [], tagsAntigas);
       if (statusAntigo === "concluida") {
-        const ms =  new Date(tarefaAtual.dataCriacao) - new Date(tarefaAtual.dataConclusao);
-        await atualizarEstatisticasProdutividade(colaborador, -ms, true,false,true,tarefaAtual.dataCriacao);
-        await reverterConclusaoTarefa(colaborador, tarefaAtual.dataConclusao, ms);
-      }else{
-        await atualizarEstatisticasProdutividade(colaborador, 0, null,false,true,tarefaAtual.dataCriacao);
+        const ms = new Date(tarefaAtual.dataConclusao) - new Date(tarefaAtual.dataCriacao);
+        await atualizarEstatisticasProdutividade(colaborador, ms, true);
+        await re(colaborador, tarefaAtual.dataConclusao);
       }
     }
 
@@ -592,8 +587,8 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
           }
 
           if (statusAntigo === "concluida" && statusNovo !== "concluida") {
-            const ms =  new Date(tarefaAtual.dataCriacao) - new Date(tarefaAtual.dataConclusao);
-            await atualizarEstatisticasProdutividade(colaborador, -ms, true);
+            const ms = new Date(tarefaAtual.dataConclusao) - new Date(tarefaAtual.dataCriacao);
+            await atualizarEstatisticasProdutividade(colaborador, ms, true);
             await registrarConclusaoPorData(colaborador, tarefaAtual.dataConclusao);
           }
         }
@@ -858,7 +853,7 @@ export async function atualizarRankingTags(userId, tagsNovas = [], tagsAntigas =
   }
 }
 
-export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoMs = null, atualizarConclusao=false, criada=false, decremet=false, data) {
+export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoMs = null, atualizarConclusao=false, criada=false, decremet=false) {
   const chave = `user:${userId}:stats:productivity`;
 
   try {
@@ -868,7 +863,7 @@ export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoM
     if(criada){
       await redis.hIncrBy(chave, `tarefas_criadas_${hoje}`, 1);
     } else if (decremet){
-      await redis.hIncrBy(chave, `tarefas_criadas_${data}`, -1);
+      await redis.hIncrBy(chave, `tarefas_criadas_${hoje}`, -1);
     }
     
 
@@ -880,8 +875,9 @@ export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoM
       await redis.incrBy(totalTempoKey, tempoConclusaoMs);
       if(atualizarConclusao){
         await redis.incrBy(totalConcluidasKey,-1)
-      }else if(!atualizarConclusao){
+      }else{
         await redis.incr(totalConcluidasKey)
+        
       }
 
       // Recupera os valores (e faz fallback para 0 caso sejam null)
