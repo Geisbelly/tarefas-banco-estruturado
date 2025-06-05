@@ -252,11 +252,14 @@ export async function atualizarTarefa(id, updates) {
   try {
     tarefasCollection = await connectToMongoDB(dbName, collectionName);
 
-    if (!ObjectId.isValid(id)) return false;
+//     if (!ObjectId.isValid(id)) return false;
 
-    const tarefaAtual = await tarefasCollection.findOne({ _id: new ObjectId(id) });
-    if (!tarefaAtual) return false;
+//     const tarefaAtual = await tarefasCollection.findOne({ _id: new ObjectId(id) });
+//     if (!tarefaAtual) return false;
 
+//     const dadosFiltrados = Object.fromEntries(
+//       Object.entries(updates).filter(([chave]) => chave !== "_id" && chave !== "id")
+//     );
 
     // Filtra _id e id para não serem setados diretamente
     const dadosFiltrados = Object.fromEntries(

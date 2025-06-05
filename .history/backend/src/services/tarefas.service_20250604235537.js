@@ -257,6 +257,9 @@ export async function atualizarTarefa(id, updates) {
     const tarefaAtual = await tarefasCollection.findOne({ _id: new ObjectId(id) });
     if (!tarefaAtual) return false;
 
+    const dadosFiltrados = Object.fromEntries(
+      Object.entries(updates).filter(([chave]) => chave !== "_id" && chave !== "id")
+    );
 
     // Filtra _id e id para não serem setados diretamente
     const dadosFiltrados = Object.fromEntries(
