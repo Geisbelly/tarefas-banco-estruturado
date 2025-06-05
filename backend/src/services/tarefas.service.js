@@ -461,11 +461,27 @@ export async function reverterConclusaoTarefa(userId, dataConclusao, tempoConclu
   }
 }
 
-// TAGS MAIS USADAS (TOP 10)
+// TAGS MAIS USADAS (TOP 10) ANTIGA, VOLTE AQUI CASO ED ERRO
+// export async function getTagsMaisUsadas(userId) {
+//   const chave = `user:${userId}:tags:top`;
+//   // Retorna do índice 0 ao 9, com scores
+//   return await redis.zrevrange(chave, 0, 9, 'WITHSCORES');
+// }
+
+// NOVA, APAGUE SE DER ERRO
 export async function getTagsMaisUsadas(userId) {
   const chave = `user:${userId}:tags:top`;
-  // Retorna do índice 0 ao 9, com scores
-  return await redis.zrevrange(chave, 0, 9, 'WITHSCORES');
+  // Tente com sendCommand se o método direto não funcionar:
+  // Nota: os argumentos para sendCommand precisam ser strings
+  const result = await redis.sendCommand(['ZREVRANGE', chave, '0', '9', 'WITHSCORES']);
+  // O resultado de sendCommand para ZREVRANGE WITHSCORES também é um array achatado.
+  // Você precisará processá-lo para o formato desejado.
+  // Ex: converter ['tagA', '10', 'tagB', '5'] para [{ value: 'tagA', score: '10' }, ...]
+  const formattedResult = [];
+  for (let i = 0; i < result.length; i += 2) {
+    formattedResult.push({ value: result[i], score: parseFloat(result[i + 1]) });
+  }
+  return formattedResult;
 }
 
 // TAREFAS CONCLUÍDAS POR DIA (intervalo de datas)
