@@ -735,7 +735,7 @@ export async function deletarTarefa(id) {
 
       if (tarefa.dataConclusao) {
         await registrarConclusaoPorData(userId, tarefa.dataConclusao); // remove de concluídos
-        await atualizarEstatisticasProdutividade(userId, -ms, true, false, true,tarefa.dataConclusao);
+        await atualizarEstatisticasProdutividade(userId, -ms, true, false, true,tarefa.da);
       } else {
         await atualizarEstatisticasProdutividade(userId, null, false, false, true);
       }
