@@ -54,7 +54,7 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask, criador }: Tas
         titulo: titulo.trim(),
         descricao: descricao.trim(),
         status,
-        criador: task.criador,
+        criador: tas,
         colaboradores,
         tags
       });
@@ -64,7 +64,7 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask, criador }: Tas
           titulo: titulo.trim(),
           descricao: descricao.trim(),
           status,
-          criador: task.criador,
+          criador: criador || task.criador,
           colaboradores,
           tags,
           dataCriacao: task.dataCriacao,
@@ -77,7 +77,7 @@ export const TaskForm = ({ onCreateTask, task=null, onUpdateTask, criador }: Tas
           titulo: titulo.trim(),
           descricao: descricao.trim(),
           status,
-          criador:  task.criador,
+          criador: criador || task.criador,
           colaboradores,
           tags,
           dataCriacao: task.dataCriacao,
