@@ -509,51 +509,6 @@ export async function atualizarTarefa(id, updates) {
 }
 
 
-export async function atualizarMetricasTarefa(tarefaAtual, updates, colaboradoresRemovidos = []) {
-  try {
-    // Se status mudou
-    if (updates.status && updates.status !== tarefaAtual.status) {
-      console.log(`Status alterado: "${tarefaAtual.status}" → "${updates.status}"`);
-
-      await atualizarContadorStatus(tarefaAtual.criador, updates.status, 1, tarefaAtual.status);
-
-      if (updates.status === "concluida") {
-        console.log('Incrementando estatísticas');
-        const ms = new Date() - new Date(tarefaAtual.dataCriacao);
-        await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms);
-        await registrarConclusaoPorData(tarefaAtual.criador);
-      }
-
-      if (tarefaAtual.status === "concluida" && updates.status !== "concluida") {
-        console.log('Decrementando estatísticas');
-        const ms = new Date(tarefaAtual.dataConclusao) - new Date(tarefaAtual.dataCriacao);
-        await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms, true);
-        await registrarConclusaoPorData(tarefaAtual.criador, tarefaAtual.dataConclusao);
-      }
-    }
-
-    // Atualização de tags
-    if (updates.hasOwnProperty('tags')) {
-      console.log(`Atualizando ranking de tags...`);
-      const tagsAntigas = tarefaAtual.tags || [];
-      const tagsNovas = updates.tags || [];
-      await atualizarRankingTags(tarefaAtual.criador, tagsNovas, tagsAntigas);
-    }
-
-    // Se colaboradores foram removidos, pode ajustar métricas deles aqui
-    if (colaboradoresRemovidos.length > 0) {
-      for (const colaborador of colaboradoresRemovidos) {
-        console.log(`Removendo métricas de ${colaborador}`);
-        // Decrementa aqui o que for necessário para cada colaborador
-        // Ex: await atualizarContadorStatus(colaborador, tarefaAtual.status, -1);
-      }
-    }
-
-  } catch (error) {
-    console.error("Erro ao atualizar métricas da tarefa:", error);
-  }
-}
-
 
 
 export async function adicionarComentario(tarefaId, autor, texto) {
