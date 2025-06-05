@@ -152,7 +152,7 @@ export async function obterTarefasConcluidasPorPeriodo(req, res) {
   try {
     const userId = req.query.userId ;
     const de = req.query.de ;
-    const ate = req.query.ate ;
+    const ate = req.query.ate || "default";
     if (!userId || !de || !ate) return res.status(400).json({ error: "Parâmetros userId, de e ate são obrigatórios." });
 
     const dataInicio = new Date(de);
@@ -175,7 +175,7 @@ export async function obterTarefasConcluidasPorPeriodo(req, res) {
 // /tarefas/produtividade?userId=...
 export async function obterProdutividade(req, res) {
   try {
-    const userId = req.query.userId ;
+    const userId = req.query.userId || "default";
     if (!userId) return res.status(400).json({ error: "Parâmetro userId é obrigatório." });
 
     const dados = await getProdutividade(userId);

@@ -405,27 +405,21 @@ export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoM
     const hoje = new Date().toISOString().split("T")[0];
 
     // Incrementa contador de tarefas criadas hoje
-    await redis.hIncrBy(chave, `tarefas_criadas_${hoje}`, 1);
+    await redis.hIncrBy(`${chave}`, `tarefas_criadas_${hoje}`, 1);
 
+    // Atualiza tempo médio de conclusão se fornecido
     if (tempoConclusaoMs !== null) {
       const totalTempoKey = `${chave}:soma_tempo_conclusao`;
       const totalConcluidasKey = `${chave}:qtd_concluidas`;
 
-      // Incrementa valores
       await redis.incrBy(totalTempoKey, tempoConclusaoMs);
       await redis.incr(totalConcluidasKey);
 
-      // Recupera os valores (e faz fallback para 0 caso sejam null)
-      const somaStr = await redis.get(totalTempoKey);
-      const qtdStr = await redis.get(totalConcluidasKey);
+      const soma = await redis.get(totalTempoKey);
+      const qtd = await redis.get(totalConcluidasKey);
 
-      const soma = parseInt(somaStr || "0");
-      const qtd = parseInt(qtdStr || "0");
-
-      if (qtd > 0) {
-        const media = Math.round(soma / qtd);
-        await redis.hSet(chave, 'tempo_medio_conclusao_ms', media);
-      }
+      const media = (parseInt(soma) / parseInt(qtd)).toFixed(0);
+      await redis.hSet(`${chave}`, 'tempo_medio_conclusao_ms', media);
     }
 
     console.log(`📊 Estatísticas atualizadas para ${userId}`);
@@ -433,7 +427,6 @@ export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoM
     console.error(`❌ Erro ao atualizar estatísticas de produtividade:`, error);
   }
 }
-
 
 export async function reverterConclusaoTarefa(userId, dataConclusao, tempoConclusaoMs) {
   const dia = new Date(dataConclusao).toISOString().split("T")[0];
@@ -464,7 +457,7 @@ export async function reverterConclusaoTarefa(userId, dataConclusao, tempoConclu
 // TAGS MAIS USADAS (TOP 10)
 export async function getTagsMaisUsadas(userId) {
   const chave = `user:${userId}:tags:top`;
-  return await redis.get(chave, 0, 9);
+  return await redis.(chave, 0, 9);
 }
 
 // TAREFAS CONCLUÍDAS POR DIA (intervalo de datas)
