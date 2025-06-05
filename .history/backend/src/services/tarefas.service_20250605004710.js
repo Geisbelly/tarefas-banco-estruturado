@@ -401,13 +401,13 @@ export async function deletarTarefa(id) {
 
       await atualizarRankingTags(tarefa.criador, tagsNovas, tagsAntigas);
       let ms = 0
-      //userId, tempoConclusaoMs = null, atualizarConclusao=false, criada=false, decremet=false
+      userId, tempoConclusaoMs = null, atualizarConclusao=false, criada=false, decremet=false
       if  (tarefa.dataConclusao){
         ms = new Date(tarefa.dataCriacao) - new Date(tarefa.dataConclusao);
         await registrarConclusaoPorData(tarefa.criador, tarefa.dataConclusao); // remove de concluídos
-        await atualizarEstatisticasProdutividade(tarefa.criador, ms, true, false,true); 
+        await atualizarEstatisticasProdutividade(tarefa.criador, ms, true, true); 
       }else{
-        await atualizarEstatisticasProdutividade(tarefa.criador, ms, false, false,true); 
+        await atualizarEstatisticasProdutividade(tarefa.criador, 0, false, true); 
       }
       
       
