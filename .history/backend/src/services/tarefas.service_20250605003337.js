@@ -393,13 +393,10 @@ export async function deletarTarefa(id) {
       console.log(`Nenhuma tarefa encontrada com o ID ${id} para exclusão.`);
       return false;
     } 
-
       await atualizarContadorStatus(tarefa.criador, tarefa.status, -1);
+      await atualizarContadorStatus(tarefaAtual.criador, updates.status, 1, tarefaAtual.status);
 
-      const tagsAntigas = tarefa.tags || []; 
-      const tagsNovas = [];
-
-      await atualizarRankingTags(tarefa.criador, tagsNovas, tagsAntigas);
+      await atualizarRankingTags();
       let ms = 0
       if  (tarefa.dataConclusao){
         ms = new Date(tarefa.dataCriacao) - new Date(tarefa.dataConclusao);

@@ -396,9 +396,6 @@ export async function deletarTarefa(id) {
 
       await atualizarContadorStatus(tarefa.criador, tarefa.status, -1);
 
-      const tagsAntigas = tarefa.tags || []; 
-      const tagsNovas = [];
-
       await atualizarRankingTags(tarefa.criador, tagsNovas, tagsAntigas);
       let ms = 0
       if  (tarefa.dataConclusao){
