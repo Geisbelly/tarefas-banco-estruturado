@@ -466,6 +466,28 @@ export async function atualizarTarefa(id, updates) {
   }
 }
 
+async function atualizarTarefaNoBanco(id, updates) {
+  const tarefasCollection = await getMongoDBCollection("tarefas");
+
+  const tarefaAtual = await tarefasCollection.findOne({ _id: id });
+  if (!tarefaAtual) throw new Error("Tarefa não encontrada");
+
+  const resultado = await tarefasCollection.updateOne(
+    { _id: id },
+    { $set: updates }
+  );
+
+  const tarefaAtualizada = await tarefasCollection.findOne({ _id: id });
+
+  await closeMongoDBConnection();
+
+  return {
+    atualizado: resultado.modifiedCount > 0,
+    anterior: tarefaAtual,
+    atualizadoDoc: tarefaAtualizada,
+  };
+}
+
 
 
 export async function adicionarComentario(tarefaId, autor, texto) {
