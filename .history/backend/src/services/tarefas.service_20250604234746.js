@@ -569,9 +569,8 @@ export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoM
 
       // Incrementa valores
       await redis.incrBy(totalTempoKey, tempoConclusaoMs);
+      ;
       if(atualizarConclusao){
-        await redis.incrBy(totalConcluidasKey,-1)
-      }else{
         await redis.incr(totalConcluidasKey)
       }
 

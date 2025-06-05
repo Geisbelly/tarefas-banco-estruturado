@@ -284,18 +284,15 @@ export async function atualizarTarefa(id, updates) {
       if (updates.status === "concluida") {
         console.log(`Registrando conclusão diária e atualizando estatísticas de produtividade para criador ${tarefaAtual.criador}...`);
         
-       if (tarefaAtual.status !== "concluida") {
-          // Tarefa está sendo marcada como concluída agora
-          const ms = new Date() - new Date(tarefaAtual.dataCriacao);
-          await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms);
+        if(tarefaAtual.status !== "concluida"){
+          const ms = new Date().toISOString() -tarefaAtual.dataCriacao.toISOString()
+          await atualizarEstatisticasProdutividade(tarefaAtual.criador,ms);
           await registrarConclusaoPorData(tarefaAtual.criador);
-        } else {
-          // Tarefa está sendo desmarcada como concluída (voltou pra pendente)
-          const ms = new Date(tarefaAtual.dataConclusao) - new Date(tarefaAtual.dataCriacao);
-          await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms, true);
+        }else{
+          const ms =  tarefaAtual.dataCriacao.toISOString() - tarefaAtual.dataConclusao.toISOString()
+          await atualizarEstatisticasProdutividade(tarefaAtual.criador,ms);
           await registrarConclusaoPorData(tarefaAtual.criador, tarefaAtual.dataConclusao);
         }
-
         
       }
     }
@@ -455,34 +452,20 @@ export async function obterContadoresStatus(userId) {
 }
 
 
-export async function registrarConclusaoPorData(userId, dataConclusao = null) {
-  // Define a data no formato yyyy-mm-dd
-  const data = dataConclusao
-    ? new Date(dataConclusao).toISOString().split("T")[0]
-    : new Date().toISOString().split("T")[0];
+export async function registrarConclusaoPorData(userId, dataConclusao=) {
+  if(dataConclusao){
 
-  const chave = `user:${userId}:tasks:completed:${data}`;
+  }
+  const hoje = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
+  const chave = `user:${userId}:tasks:completed:${hoje}`;
 
   try {
-    if (dataConclusao) {
-      // Se dataConclusao foi passada: está removendo uma conclusão
-      const valorAtual = await redis.get(chave);
-      if (valorAtual && parseInt(valorAtual) > 0) {
-        const novoValor = await redis.decr(chave);
-        console.log(`↩️ Conclusão removida de ${data}: ${chave} = ${novoValor}`);
-      } else {
-        console.log(`⚠️ Nenhuma conclusão para remover em ${data}`);
-      }
-    } else {
-      // Conclusão normal do dia atual
-      const novoValor = await redis.incr(chave);
-      console.log(`✅ Conclusão registrada em ${data}: ${chave} = ${novoValor}`);
-    }
+    const novoValor = await redis.incr(chave);
+    console.log(`✅ Conclusão diária registrada: ${chave} = ${novoValor}`);
   } catch (error) {
-    console.error(`❌ Erro ao registrar/ajustar conclusão por data (${chave}):`, error);
+    console.error(`❌ Erro ao registrar conclusão por data (${chave}):`, error);
   }
 }
-
 
 // Se der erro, volte aqui
 // export async function atualizarRankingTags(userId, tags = []) {
@@ -569,11 +552,7 @@ export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoM
 
       // Incrementa valores
       await redis.incrBy(totalTempoKey, tempoConclusaoMs);
-      if(atualizarConclusao){
-        await redis.incrBy(totalConcluidasKey,-1)
-      }else{
-        await redis.incr(totalConcluidasKey)
-      }
+      await redis.incr(totalConcluidasKey);
 
       // Recupera os valores (e faz fallback para 0 caso sejam null)
       const somaStr = await redis.get(totalTempoKey);

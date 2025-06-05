@@ -572,7 +572,7 @@ export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoM
       if(atualizarConclusao){
         await redis.incrBy(totalConcluidasKey,-1)
       }else{
-        await redis.incr(totalConcluidasKey)
+        await redis
       }
 
       // Recupera os valores (e faz fallback para 0 caso sejam null)
