@@ -605,6 +605,8 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
 }
 
 
+
+
 export async function adicionarComentario(tarefaId, autor, texto) {
   let tarefasCollection;
   try {
