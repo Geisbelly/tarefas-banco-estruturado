@@ -7,16 +7,16 @@ const Card = ({ className, children }: { className?: string; children: React.Rea
   <div className={`rounded-xl border bg-card text-card-foreground shadow-lg backdrop-blur-sm bg-white/10 ${className}`}>{children}</div>
 );
 const CardHeader = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-  <div className={`flex flex-col space-y-1.5 ${className}`}>{children}</div> // Padding removido daqui, será aplicado na instância
+  <div className={`flex flex-col space-y-1.5 p-4 md:p-6 ${className}`}>{children}</div>
 );
 const CardTitle = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-  <h3 className={`font-semibold leading-none tracking-tight text-gray-200 ${className}`}>{children}</h3> // Tamanho da fonte removido daqui, será aplicado na instância
+  <h3 className={`text-base md:text-lg font-semibold leading-none tracking-tight text-gray-200 ${className}`}>{children}</h3>
 );
 const CardDescription = ({ className, children }: { className?: string; children: React.ReactNode }) => (
     <p className={`text-xs md:text-sm text-muted-foreground text-gray-400 ${className}`}>{children}</p>
 );
 const CardContent = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-  <div className={`${className}`}>{children}</div> // Padding removido daqui, será aplicado na instância
+  <div className={`p-4 md:p-6 ${className}`}>{children}</div>
 );
 const TabsContext = React.createContext<{ activeTab: string; setActiveTab: (value: string) => void } | null>(null);
 const Tabs = ({ defaultValue, className, children }: { defaultValue: string; className?: string; children: React.ReactNode }) => {
@@ -112,14 +112,12 @@ const Statistics = ({
   startDateConcluidas, setStartDateConcluidas, endDateConcluidas, setEndDateConcluidas,
 }: StatisticsProps) => {
 
-  const PIE_CHART_COLORS = ['#eab308', '#3b82f6', '#22c55e']; // Amarelo, Azul, Verde para status
-  const PODIUM_COLORS = ['#FFD700', '#C0C0C0', '#CD7F32']; // Gold, Silver, Bronze
-  // Cores harmonizadas para as tags (tons de azul/ciano)
-  const BAR_CHART_TAG_COLORS_HARMONIZED = ['#67e8f9', '#22d3ee', '#06b6d4', '#0891b2', '#0e7490', '#155e75', '#164e63'];
-
+  const PIE_CHART_COLORS = ['#eab308', '#3b82f6', '#22c55e'];
+  const BAR_CHART_TAG_COLORS_DEFAULT = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#a4de6c', '#d0ed57', '#ff7300'];
+  const PODIUM_COLORS = ['#FFD700', '#C0C0C0', '#CD7F32'];
 
   if (!generalStats && statusChartData.length === 0 && tagsChartData.length === 0 && activityConcluidasChartData.length === 0 && !userIdentifier) {
-    return (
+    return ( // CORRIGIDO: JSX da tela de loading
         <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white p-4">
             <Clock className="w-16 h-16 mb-4 text-blue-400 animate-spin" />
             <h2 className="text-2xl font-semibold mb-2">Carregando dados...</h2>
@@ -129,7 +127,7 @@ const Statistics = ({
   }
 
   if (!generalStats || (generalStats.totalTasksAtivas === 0 && generalStats.tasksCreatedToday === 0 && generalStats.completedTasks === 0 && generalStats.pendingTasks === 0 && generalStats.inProgressTasks === 0 )) {
-    return (
+    return ( // CORRIGIDO: JSX da tela de nenhum dado
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4">
             <Info className="w-16 h-16 mb-4 text-gray-500" />
             <h2 className="text-2xl font-semibold text-gray-300 mb-2">Nenhum dado de tarefa encontrado</h2>
@@ -151,56 +149,55 @@ const Statistics = ({
         {userIdentifier && <p className="text-xs text-gray-500 mt-1">Utilizador: <code className="bg-gray-700 p-1 rounded text-gray-300">{userIdentifier}</code></p>}
       </div>
 
-      {/* Cards de Estatísticas - AJUSTADOS PARA SEREM MENORES E NOVA GRID */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-8">
         <Card>
-          <CardHeader className="p-2 sm:p-3 pb-0 sm:pb-1"> {/* Padding reduzido */}
-            <CardTitle className="flex items-center text-gray-300 text-xs font-medium"> {/* Fonte reduzida */}
-              <ListChecks className="w-3 h-3 mr-1 sm:mr-2 text-blue-400"/>Total Ativas
+          <CardHeader className="p-3 pb-1">
+            <CardTitle className="flex items-center text-gray-300 text-xs sm:text-sm font-medium">
+              <ListChecks className="w-3 h-3 sm:w-4 sm:h-4 mr-2 text-blue-400"/>Total Tarefas Ativas
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-2 sm:px-3 pt-1 pb-2 sm:pb-3"> {/* Padding ajustado */}
-            <div className="text-lg sm:text-xl font-bold text-white">{stats.totalTasksAtivas}</div> {/* Fonte reduzida */}
+          <CardContent className="px-3 pt-1 pb-3">
+            <div className="text-xl sm:text-2xl font-bold text-white">{stats.totalTasksAtivas}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="p-2 sm:p-3 pb-0 sm:pb-1">
-            <CardTitle className="flex items-center text-gray-300 text-xs font-medium">
-                <TrendingUp className="w-3 h-3 mr-1 sm:mr-2 text-green-400"/>Taxa Conclusão (Sem)
+          <CardHeader className="p-3 pb-1">
+            <CardTitle className="flex items-center text-gray-300 text-xs sm:text-sm font-medium">
+                <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-2 text-green-400"/>Taxa Conclusão (Sem.)
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-2 sm:px-3 pt-1 pb-2 sm:pb-3">
-            <div className="text-lg sm:text-xl font-bold text-green-400">{stats.weeklyCompletionRate}%</div>
+          <CardContent className="px-3 pt-1 pb-3">
+            <div className="text-xl sm:text-2xl font-bold text-green-400">{stats.weeklyCompletionRate}%</div>
           </CardContent>
         </Card>
          <Card>
-          <CardHeader className="p-2 sm:p-3 pb-0 sm:pb-1">
-            <CardTitle className="flex items-center text-gray-300 text-xs font-medium">
-                <Zap className="w-3 h-3 mr-1 sm:mr-2 text-yellow-400"/>Criadas Hoje
+          <CardHeader className="p-3 pb-1">
+            <CardTitle className="flex items-center text-gray-300 text-xs sm:text-sm font-medium">
+                <Zap className="w-3 h-3 sm:w-4 sm:h-4 mr-2 text-yellow-400"/>Tarefas Criadas Hoje
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-2 sm:px-3 pt-1 pb-2 sm:pb-3">
-            <div className="text-lg sm:text-xl font-bold text-yellow-400">{stats.tasksCreatedToday}</div>
+          <CardContent className="px-3 pt-1 pb-3">
+            <div className="text-xl sm:text-2xl font-bold text-yellow-400">{stats.tasksCreatedToday}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="p-2 sm:p-3 pb-0 sm:pb-1">
-            <CardTitle className="flex items-center text-gray-300 text-xs font-medium">
-                <CalendarCheck2 className="w-3 h-3 mr-1 sm:mr-2 text-teal-400"/>Tempo Médio Concl.
+          <CardHeader className="p-3 pb-1">
+            <CardTitle className="flex items-center text-gray-300 text-xs sm:text-sm font-medium">
+                <CalendarCheck2 className="w-3 h-3 sm:w-4 sm:h-4 mr-2 text-teal-400"/>Tempo Médio Conclusão
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-2 sm:px-3 pt-1 pb-2 sm:pb-3">
-            <div className="text-base sm:text-lg font-bold text-teal-400">{stats.avgCompletionTime || "N/A"}</div>
+          <CardContent className="px-3 pt-1 pb-3">
+            <div className="text-lg sm:text-xl font-bold text-teal-400">{stats.avgCompletionTime || "N/A"}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="p-2 sm:p-3 pb-0 sm:pb-1">
-            <CardTitle className="flex items-center text-gray-300 text-xs font-medium">
-                <Tags className="w-3 h-3 mr-1 sm:mr-2 text-purple-400"/>Tags (Top {tagsChartData.length})
+        <Card> {/* Este será o 5º card */}
+          <CardHeader className="p-3 pb-1">
+            <CardTitle className="flex items-center text-gray-300 text-xs sm:text-sm font-medium">
+                <Tags className="w-3 h-3 sm:w-4 sm:h-4 mr-2 text-purple-400"/>Tags (Top {tagsChartData.length})
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-2 sm:px-3 pt-1 pb-2 sm:pb-3">
-            <div className="text-lg sm:text-xl font-bold text-purple-400">{stats.uniqueTags}</div>
+          <CardContent className="px-3 pt-1 pb-3">
+            <div className="text-xl sm:text-2xl font-bold text-purple-400">{stats.uniqueTags}</div>
           </CardContent>
         </Card>
       </div>
@@ -214,8 +211,8 @@ const Statistics = ({
 
         <TabsContent value="status">
             <Card>
-            <CardHeader className="p-4 md:p-6"><CardTitle>Distribuição por Estado</CardTitle><CardDescription>Visão geral do estado atual das suas tarefas.</CardDescription></CardHeader>
-            <CardContent className="p-4 md:p-6 pt-0 flex justify-center">
+            <CardHeader><CardTitle>Distribuição por Estado</CardTitle><CardDescription>Visão geral do estado atual das suas tarefas.</CardDescription></CardHeader>
+            <CardContent className="pt-0 flex justify-center">
               <div className="h-72 sm:h-80 w-full max-w-md">
                 <ChartContainer>
                   <PieChart>
@@ -242,12 +239,12 @@ const Statistics = ({
 
         <TabsContent value="activityConcluidas">
           <Card>
-            <CardHeader className="p-4 md:p-6">
+            <CardHeader>
                 <CardTitle>Tarefas Concluídas no Período</CardTitle>
                 <CardDescription>Número de tarefas finalizadas por dia no período selecionado.</CardDescription>
             </CardHeader>
-            <CardContent className="p-4 md:p-6 pt-0">
-                <div className="mb-4 p-3 border border-gray-700 rounded-lg bg-gray-800/30">
+            <CardContent className="pt-0">
+                <div className="mb-4 p-4 border border-gray-700 rounded-lg bg-gray-800/30">
                     <label htmlFor="startDateConcluidas" className="block text-xs font-medium text-gray-400 mb-1">Período:</label>
                     <div className="flex items-center gap-2">
                         <input id="startDateConcluidas" type="date" value={startDateConcluidas} onChange={e => setStartDateConcluidas(e.target.value)} className="bg-gray-700 border-gray-600 text-gray-200 rounded p-2 text-sm w-full focus:ring-sky-500 focus:border-sky-500"/>
@@ -272,8 +269,8 @@ const Statistics = ({
         
         <TabsContent value="tags">
             <Card>
-            <CardHeader className="p-4 md:p-6"><CardTitle>Top 10 Tags Mais Usadas</CardTitle><CardDescription>As tags mais frequentes, com destaque para o pódio.</CardDescription></CardHeader>
-            <CardContent className="p-4 md:p-6 pt-0">
+            <CardHeader><CardTitle>Top 10 Tags Mais Usadas</CardTitle><CardDescription>As tags mais frequentes, com destaque para o pódio.</CardDescription></CardHeader>
+            <CardContent className="pt-0">
               <div className="h-[400px] sm:h-[480px] w-full mb-6">
                 <ChartContainer>
                   <BarChart data={tagsChartData} 
@@ -288,8 +285,8 @@ const Statistics = ({
                     <YAxis type="number" stroke="#9ca3af" fontSize="10px" allowDecimals={false} />
                     <Tooltip content={<CustomChartTooltipContent />} cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}/>
                     <Bar dataKey="count" name="Nº de Tarefas" radius={[4, 4, 0, 0]} >
-                      {tagsChartData.map((entry, index) => { // index é o índice no array `tagsChartData` já ordenado
-                          let fillColor = BAR_CHART_TAG_COLORS_HARMONIZED[ (entry.rank - 1 - PODIUM_COLORS.length + BAR_CHART_TAG_COLORS_HARMONIZED.length) % BAR_CHART_TAG_COLORS_HARMONIZED.length];
+                      {tagsChartData.map((entry, index) => {
+                          let fillColor = BAR_CHART_TAG_COLORS_DEFAULT[ (entry.rank - 1 - PODIUM_COLORS.length + BAR_CHART_TAG_COLORS_DEFAULT.length) % BAR_CHART_TAG_COLORS_DEFAULT.length];
                           if (entry.rank <= PODIUM_COLORS.length) {
                             fillColor = PODIUM_COLORS[entry.rank - 1];
                           }
@@ -305,7 +302,7 @@ const Statistics = ({
                     key={tagData.tag} 
                     className="w-full max-w-xs text-center"
                     style={{ 
-                        borderLeftColor: tagData.rank <= PODIUM_COLORS.length ? PODIUM_COLORS[tagData.rank -1] : BAR_CHART_TAG_COLORS_HARMONIZED[(tagData.rank - 1 - PODIUM_COLORS.length + BAR_CHART_TAG_COLORS_HARMONIZED.length) % BAR_CHART_TAG_COLORS_HARMONIZED.length], 
+                        borderLeftColor: tagData.rank <= PODIUM_COLORS.length ? PODIUM_COLORS[tagData.rank -1] : BAR_CHART_TAG_COLORS_DEFAULT[(tagData.rank - 1 - PODIUM_COLORS.length + BAR_CHART_TAG_COLORS_DEFAULT.length) % BAR_CHART_TAG_COLORS_DEFAULT.length], 
                         borderLeftWidth: 3,
                     }}
                   >
@@ -350,6 +347,7 @@ const formatMillisecondsToReadable = (ms: number | undefined | null): string => 
   return parts.join(' ');
 };
 // --- Fim Funções Auxiliares ---
+
 
 // --- Componente Principal App ---
 const App = () => {
@@ -541,6 +539,7 @@ const App = () => {
     );
   }
 
+
   return (
     <div className="min-h-screen bg-gray-900 text-gray-200 font-sans">
       <main>
@@ -549,18 +548,14 @@ const App = () => {
           generalStats={generalStats}
           statusChartData={statusChartData}
           activityConcluidasChartData={activityConcluidasChartData}
-          activityCriadasChartData={null} // Removido, mas a prop ainda existe na interface
+          activityCriadasChartData={null} // Removido
           tagsChartData={tagsChartData}
           startDateConcluidas={startDateConcluidas}
           setStartDateConcluidas={setStartDateConcluidas}
           endDateConcluidas={endDateConcluidas}
           setEndDateConcluidas={setEndDateConcluidas}
-          // Props de datas para tarefas criadas foram removidas do componente Statistics
-          // Para evitar erro de prop não existente, vamos remover da chamada também
-          // startDateCriadas="" // Removido
-          // setStartDateCriadas={() => {}} // Removido
-          // endDateCriadas="" // Removido
-          // setEndDateCriadas={() => {}} // Removido
+          // Props de datas para tarefas criadas foram efetivamente removidas da interface StatisticsProps
+          // então não precisamos mais passar dummies.
         />
       </main>
       <footer className="text-center py-4 text-xs text-gray-500">

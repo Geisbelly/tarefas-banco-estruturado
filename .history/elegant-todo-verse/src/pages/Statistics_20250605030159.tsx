@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { BarChart3, PieChart as PieChartIcon, ListChecks, MessageSquare, Tags, CheckCircle, Clock, Zap, CalendarCheck2, TrendingUp, Info, Filter } from 'lucide-react';
 
-// --- Componentes UI (Card, Tabs, etc.) ---
+// --- Componentes UI (Card, Tabs, etc.) - permanecem inalterados ---
 const Card = ({ className, children }: { className?: string; children: React.ReactNode }) => (
   <div className={`rounded-xl border bg-card text-card-foreground shadow-lg backdrop-blur-sm bg-white/10 ${className}`}>{children}</div>
 );
 const CardHeader = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-  <div className={`flex flex-col space-y-1.5 ${className}`}>{children}</div> // Padding removido daqui, será aplicado na instância
+  <div className={`flex flex-col space-y-1.5 p-4 md:p-6 ${className}`}>{children}</div>
 );
 const CardTitle = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-  <h3 className={`font-semibold leading-none tracking-tight text-gray-200 ${className}`}>{children}</h3> // Tamanho da fonte removido daqui, será aplicado na instância
+  <h3 className={`text-base md:text-lg font-semibold leading-none tracking-tight text-gray-200 ${className}`}>{children}</h3>
 );
 const CardDescription = ({ className, children }: { className?: string; children: React.ReactNode }) => (
     <p className={`text-xs md:text-sm text-muted-foreground text-gray-400 ${className}`}>{children}</p>
 );
 const CardContent = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-  <div className={`${className}`}>{children}</div> // Padding removido daqui, será aplicado na instância
+  <div className={`p-4 md:p-6 ${className}`}>{children}</div> // Ajustei o padding top que estava pt-0
 );
 const TabsContext = React.createContext<{ activeTab: string; setActiveTab: (value: string) => void } | null>(null);
 const Tabs = ({ defaultValue, className, children }: { defaultValue: string; className?: string; children: React.ReactNode }) => {
@@ -34,7 +34,7 @@ const TabsTrigger = ({ value, className, children }: { value: string; className?
 const TabsContent = ({ value, className, children }: { value: string; className?: string; children: React.ReactNode }) => {
   const context = React.useContext(TabsContext);
   if (!context) throw new Error("TabsContent must be used within Tabs");
-  return <div className={`${context.activeTab === value ? 'block' : 'hidden'} mt-6 ${className}`}>{children}</div>;
+  return <div className={`${context.activeTab === value ? 'block' : 'hidden'} mt-6 ${className}`}>{children}</div>; // Adicionado mt-6 para espaço após TabsList
 };
 const Badge = ({ className, children, style }: { className?: string; children: React.ReactNode; style?: React.CSSProperties }) => (
   <span className={`inline-flex items-center rounded-full border border-gray-600 px-2.5 py-0.5 text-xs font-semibold bg-gray-700/50 text-gray-200 ${className}`} style={style}>{children}</span>
@@ -49,7 +49,7 @@ const CustomChartTooltipContent = (props: any) => {
       <div className="p-2 text-xs bg-gray-800/90 border border-gray-700 rounded-lg shadow-xl text-gray-200">
         <p className="label font-bold mb-1">{`${label || payload[0].payload.name || payload[0].payload.tag}`}</p>
         {payload.map((entry: any, index: number) => (
-          <p key={`item-${index}`} style={{ color: (entry.color as string) || (entry.fill as string) }} className="capitalize">
+          <p key={`item-${index}`} style={{ color: entry.color || entry.fill }} className="capitalize">
             {`${entry.name}: ${entry.value}`}
           </p>
         ))}
@@ -79,6 +79,9 @@ interface ApiTagData {
 interface ApiConcluidasPorDia {
   [date: string]: number;
 }
+interface ApiCriadasPorDia {
+    [date: string]: number;
+}
 // --- Fim Tipos ---
 
 // --- Componente Statistics ---
@@ -89,6 +92,7 @@ interface StatisticsProps {
     pendingTasks: number;
     inProgressTasks: number;
     completedTasks: number;
+    totalComments: number;
     uniqueTags: number;
     avgCompletionTime: string;
     tasksCreatedToday: number;
@@ -96,11 +100,16 @@ interface StatisticsProps {
   } | null;
   statusChartData: { name: string; value: number; fill: string }[];
   activityConcluidasChartData: { dia: string; tarefasConcluidas: number }[];
+  activityCriadasChartData: { dia: string; tarefasCriadas: number }[] | null;
   tagsChartData: { tag: string; count: number; rank: number }[];
   startDateConcluidas: string;
   setStartDateConcluidas: (date: string) => void;
   endDateConcluidas: string;
   setEndDateConcluidas: (date: string) => void;
+  startDateCriadas: string;
+  setStartDateCriadas: (date: string) => void;
+  endDateCriadas: string;
+  setEndDateCriadas: (date: string) => void;
 }
 
 const Statistics = ({
@@ -108,15 +117,15 @@ const Statistics = ({
   generalStats,
   statusChartData,
   activityConcluidasChartData,
+  activityCriadasChartData,
   tagsChartData,
   startDateConcluidas, setStartDateConcluidas, endDateConcluidas, setEndDateConcluidas,
+  startDateCriadas, setStartDateCriadas, endDateCriadas, setEndDateCriadas,
 }: StatisticsProps) => {
 
-  const PIE_CHART_COLORS = ['#eab308', '#3b82f6', '#22c55e']; // Amarelo, Azul, Verde para status
+  const PIE_CHART_COLORS = ['#eab308', '#3b82f6', '#22c55e'];
+  const BAR_CHART_TAG_COLORS_DEFAULT = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#a4de6c', '#d0ed57', '#ff7300'];
   const PODIUM_COLORS = ['#FFD700', '#C0C0C0', '#CD7F32']; // Gold, Silver, Bronze
-  // Cores harmonizadas para as tags (tons de azul/ciano)
-  const BAR_CHART_TAG_COLORS_HARMONIZED = ['#67e8f9', '#22d3ee', '#06b6d4', '#0891b2', '#0e7490', '#155e75', '#164e63'];
-
 
   if (!generalStats && statusChartData.length === 0 && tagsChartData.length === 0 && activityConcluidasChartData.length === 0 && !userIdentifier) {
     return (
@@ -142,8 +151,8 @@ const Statistics = ({
   const stats = generalStats;
 
   return (
-    <div className="container mx-auto px-2 sm:px-4 py-8 space-y-8">
-      <div className="text-center">
+    <div className="container mx-auto px-2 sm:px-4 py-8">
+      <div className="text-center mb-8">
         <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 sm:mb-4 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
           Dashboard de Produtividade
         </h1>
@@ -151,71 +160,48 @@ const Statistics = ({
         {userIdentifier && <p className="text-xs text-gray-500 mt-1">Utilizador: <code className="bg-gray-700 p-1 rounded text-gray-300">{userIdentifier}</code></p>}
       </div>
 
-      {/* Cards de Estatísticas - AJUSTADOS PARA SEREM MENORES E NOVA GRID */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+      {/* Cards de Estatísticas */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-4 mb-8">
         <Card>
-          <CardHeader className="p-2 sm:p-3 pb-0 sm:pb-1"> {/* Padding reduzido */}
-            <CardTitle className="flex items-center text-gray-300 text-xs font-medium"> {/* Fonte reduzida */}
-              <ListChecks className="w-3 h-3 mr-1 sm:mr-2 text-blue-400"/>Total Ativas
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-2 sm:px-3 pt-1 pb-2 sm:pb-3"> {/* Padding ajustado */}
-            <div className="text-lg sm:text-xl font-bold text-white">{stats.totalTasksAtivas}</div> {/* Fonte reduzida */}
-          </CardContent>
+          <CardHeader className="pb-2"><CardTitle className="flex items-center text-gray-300 text-sm font-medium"><ListChecks className="w-4 h-4 mr-2 text-blue-400"/>Total Tarefas Ativas</CardTitle></CardHeader>
+          <CardContent className="pt-2"><div className="text-2xl font-bold text-white">{stats.totalTasksAtivas}</div></CardContent>
         </Card>
         <Card>
-          <CardHeader className="p-2 sm:p-3 pb-0 sm:pb-1">
-            <CardTitle className="flex items-center text-gray-300 text-xs font-medium">
-                <TrendingUp className="w-3 h-3 mr-1 sm:mr-2 text-green-400"/>Taxa Conclusão (Sem)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-2 sm:px-3 pt-1 pb-2 sm:pb-3">
-            <div className="text-lg sm:text-xl font-bold text-green-400">{stats.weeklyCompletionRate}%</div>
-          </CardContent>
+          <CardHeader className="pb-2"><CardTitle className="flex items-center text-gray-300 text-sm font-medium"><TrendingUp className="w-4 h-4 mr-2 text-green-400"/>Taxa Conclusão (Sem.)</CardTitle></CardHeader>
+          <CardContent className="pt-2"><div className="text-2xl font-bold text-green-400">{stats.weeklyCompletionRate}%</div></CardContent>
         </Card>
          <Card>
-          <CardHeader className="p-2 sm:p-3 pb-0 sm:pb-1">
-            <CardTitle className="flex items-center text-gray-300 text-xs font-medium">
-                <Zap className="w-3 h-3 mr-1 sm:mr-2 text-yellow-400"/>Criadas Hoje
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-2 sm:px-3 pt-1 pb-2 sm:pb-3">
-            <div className="text-lg sm:text-xl font-bold text-yellow-400">{stats.tasksCreatedToday}</div>
-          </CardContent>
+          <CardHeader className="pb-2"><CardTitle className="flex items-center text-gray-300 text-sm font-medium"><Zap className="w-4 h-4 mr-2 text-yellow-400"/>Tarefas Criadas Hoje</CardTitle></CardHeader>
+          <CardContent className="pt-2"><div className="text-2xl font-bold text-yellow-400">{stats.tasksCreatedToday}</div></CardContent>
         </Card>
         <Card>
-          <CardHeader className="p-2 sm:p-3 pb-0 sm:pb-1">
-            <CardTitle className="flex items-center text-gray-300 text-xs font-medium">
-                <CalendarCheck2 className="w-3 h-3 mr-1 sm:mr-2 text-teal-400"/>Tempo Médio Concl.
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-2 sm:px-3 pt-1 pb-2 sm:pb-3">
-            <div className="text-base sm:text-lg font-bold text-teal-400">{stats.avgCompletionTime || "N/A"}</div>
-          </CardContent>
+          <CardHeader className="pb-2"><CardTitle className="flex items-center text-gray-300 text-sm font-medium"><CalendarCheck2 className="w-4 h-4 mr-2 text-teal-400"/>Tempo Médio Conclusão</CardTitle></CardHeader>
+          <CardContent className="pt-2"><div className="text-xl font-bold text-teal-400">{stats.avgCompletionTime || "N/A"}</div></CardContent>
         </Card>
         <Card>
-          <CardHeader className="p-2 sm:p-3 pb-0 sm:pb-1">
-            <CardTitle className="flex items-center text-gray-300 text-xs font-medium">
-                <Tags className="w-3 h-3 mr-1 sm:mr-2 text-purple-400"/>Tags (Top {tagsChartData.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-2 sm:px-3 pt-1 pb-2 sm:pb-3">
-            <div className="text-lg sm:text-xl font-bold text-purple-400">{stats.uniqueTags}</div>
-          </CardContent>
+          <CardHeader className="pb-2"><CardTitle className="flex items-center text-gray-300 text-sm font-medium"><MessageSquare className="w-4 h-4 mr-2 text-orange-400"/>Total Comentários</CardTitle></CardHeader>
+          <CardContent className="pt-2"><div className="text-2xl font-bold text-orange-400">{stats.totalComments}</div></CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="flex items-center text-gray-300 text-sm font-medium"><Tags className="w-4 h-4 mr-2 text-purple-400"/>Tags (Top {tagsChartData.length})</CardTitle></CardHeader>
+          <CardContent className="pt-2"><div className="text-2xl font-bold text-purple-400">{stats.uniqueTags}</div></CardContent>
         </Card>
       </div>
 
+      {/* Card de Filtro Global REMOVIDO daqui */}
+
       <Tabs defaultValue="status" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-6">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-4 mb-6"> {/* Ajustado para mb-6 */}
           <TabsTrigger value="status"><PieChartIcon className="w-4 h-4 mr-2" /> Estado Atual</TabsTrigger>
           <TabsTrigger value="activityConcluidas"><BarChart3 className="w-4 h-4 mr-2" /> Concluídas</TabsTrigger>
+          <TabsTrigger value="activityCriadas"><Zap className="w-4 h-4 mr-2" /> Criadas</TabsTrigger>
           <TabsTrigger value="tags"><Tags className="w-4 h-4 mr-2" /> Top Tags</TabsTrigger>
         </TabsList>
 
         <TabsContent value="status">
             <Card>
-            <CardHeader className="p-4 md:p-6"><CardTitle>Distribuição por Estado</CardTitle><CardDescription>Visão geral do estado atual das suas tarefas.</CardDescription></CardHeader>
-            <CardContent className="p-4 md:p-6 pt-0 flex justify-center">
+            <CardHeader><CardTitle>Distribuição por Estado</CardTitle><CardDescription>Visão geral do estado atual das suas tarefas.</CardDescription></CardHeader>
+            <CardContent className="pt-0 flex justify-center"> {/* pt-0 para alinhar com outros CardContent */}
               <div className="h-72 sm:h-80 w-full max-w-md">
                 <ChartContainer>
                   <PieChart>
@@ -242,12 +228,12 @@ const Statistics = ({
 
         <TabsContent value="activityConcluidas">
           <Card>
-            <CardHeader className="p-4 md:p-6">
+            <CardHeader>
                 <CardTitle>Tarefas Concluídas no Período</CardTitle>
                 <CardDescription>Número de tarefas finalizadas por dia no período selecionado.</CardDescription>
             </CardHeader>
-            <CardContent className="p-4 md:p-6 pt-0">
-                <div className="mb-4 p-3 border border-gray-700 rounded-lg bg-gray-800/30">
+            <CardContent className="pt-0">
+                <div className="mb-4 p-4 border border-gray-700 rounded-lg bg-gray-800/30">
                     <label htmlFor="startDateConcluidas" className="block text-xs font-medium text-gray-400 mb-1">Período:</label>
                     <div className="flex items-center gap-2">
                         <input id="startDateConcluidas" type="date" value={startDateConcluidas} onChange={e => setStartDateConcluidas(e.target.value)} className="bg-gray-700 border-gray-600 text-gray-200 rounded p-2 text-sm w-full focus:ring-sky-500 focus:border-sky-500"/>
@@ -270,27 +256,62 @@ const Statistics = ({
           </Card>
         </TabsContent>
         
+        <TabsContent value="activityCriadas">
+          <Card>
+            <CardHeader>
+                <CardTitle>Tarefas Criadas no Período</CardTitle>
+                <CardDescription>Número de tarefas iniciadas por dia no período selecionado.</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+                <div className="mb-4 p-4 border border-gray-700 rounded-lg bg-gray-800/30">
+                    <label htmlFor="startDateCriadas" className="block text-xs font-medium text-gray-400 mb-1">Período:</label>
+                    <div className="flex items-center gap-2">
+                        <input id="startDateCriadas" type="date" value={startDateCriadas} onChange={e => setStartDateCriadas(e.target.value)} className="bg-gray-700 border-gray-600 text-gray-200 rounded p-2 text-sm w-full focus:ring-sky-500 focus:border-sky-500"/>
+                        <span className="text-gray-400">até</span>
+                        <input id="endDateCriadas" type="date" value={endDateCriadas} onChange={e => setEndDateCriadas(e.target.value)} className="bg-gray-700 border-gray-600 text-gray-200 rounded p-2 text-sm w-full focus:ring-sky-500 focus:border-sky-500"/>
+                    </div>
+                </div>
+              {activityCriadasChartData ? (
+                <div className="h-72 sm:h-80 w-full">
+                  <ChartContainer>
+                    <BarChart data={activityCriadasChartData} margin={{ top: 5, right: typeof window !== 'undefined' && window.innerWidth < 640 ? 0 : 20, left: typeof window !== 'undefined' && window.innerWidth < 640 ? -30 : -10, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                      <XAxis dataKey="dia" stroke="#9ca3af" fontSize="10px" />
+                      <YAxis stroke="#9ca3af" fontSize="10px" allowDecimals={false}/>
+                      <Tooltip content={<CustomChartTooltipContent />} cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}/>
+                      <Bar dataKey="tarefasCriadas" name="Tarefas Criadas" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={typeof window !== 'undefined' && window.innerWidth < 640 ? 20 : 30} />
+                    </BarChart>
+                  </ChartContainer>
+                </div>
+              ) : (
+                <div className="text-center text-gray-400 py-10">
+                  <p>Os dados para este gráfico (tarefas criadas por período) não puderam ser carregados.</p>
+                  <p className="text-xs mt-2">Verifique se a API para tarefas criadas por período está configurada e respondendo corretamente.</p>
+                  <p className="text-xs mt-1">(Ex: <code>/tarefas/criadasPorPeriodo?userId=...&de=...&ate=...</code> retornando <code>{"{YYYY-MM-DD: count}"}</code>)</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="tags">
             <Card>
-            <CardHeader className="p-4 md:p-6"><CardTitle>Top 10 Tags Mais Usadas</CardTitle><CardDescription>As tags mais frequentes, com destaque para o pódio.</CardDescription></CardHeader>
-            <CardContent className="p-4 md:p-6 pt-0">
-              <div className="h-[400px] sm:h-[480px] w-full mb-6">
+            <CardHeader><CardTitle>Top 10 Tags Mais Usadas</CardTitle><CardDescription>As tags mais frequentes nas suas tarefas.</CardDescription></CardHeader>
+            <CardContent className="pt-0">
+              <div className="h-[400px] sm:h-[450px] w-full mb-6">
                 <ChartContainer>
-                  <BarChart data={tagsChartData} 
-                    margin={{ top: 20, right: 20, left: 0, bottom: 70 }}
-                    barCategoryGap="20%"
+                  <BarChart data={tagsChartData} layout="vertical" 
+                    margin={{ top: 5, right: typeof window !== 'undefined' && window.innerWidth < 640 ? 20 : 30, left: typeof window !== 'undefined' && window.innerWidth < 640 ? 20 : 70, bottom: 20 }}
+                    barCategoryGap="20%" // Espaçamento entre barras
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                    <XAxis 
-                        dataKey="tag" type="category" stroke="#9ca3af" fontSize="10px" 
-                        interval={0} angle={-45} textAnchor="end" height={60}
-                    />
-                    <YAxis type="number" stroke="#9ca3af" fontSize="10px" allowDecimals={false} />
+                    <XAxis type="number" stroke="#9ca3af" fontSize="10px" allowDecimals={false} />
+                    <YAxis dataKey="tag" type="category" stroke="#9ca3af" fontSize="10px" width={typeof window !== 'undefined' && window.innerWidth < 640 ? 60 : 80} />
                     <Tooltip content={<CustomChartTooltipContent />} cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}/>
-                    <Bar dataKey="count" name="Nº de Tarefas" radius={[4, 4, 0, 0]} >
-                      {tagsChartData.map((entry, index) => { // index é o índice no array `tagsChartData` já ordenado
-                          let fillColor = BAR_CHART_TAG_COLORS_HARMONIZED[ (entry.rank - 1 - PODIUM_COLORS.length + BAR_CHART_TAG_COLORS_HARMONIZED.length) % BAR_CHART_TAG_COLORS_HARMONIZED.length];
-                          if (entry.rank <= PODIUM_COLORS.length) {
+                    <Bar dataKey="count" name="Nº de Tarefas" radius={[0, 4, 4, 0]} barSize={typeof window !== 'undefined' && window.innerWidth < 640 ? 12 : 18}>
+                      {tagsChartData.map((entry, index) => {
+                          let fillColor = BAR_CHART_TAG_COLORS_DEFAULT[ (index - PODIUM_COLORS.length + BAR_CHART_TAG_COLORS_DEFAULT.length) % BAR_CHART_TAG_COLORS_DEFAULT.length];
+                          if (entry.rank <= PODIUM_COLORS.length) { // Usar entry.rank que vem do processamento
                             fillColor = PODIUM_COLORS[entry.rank - 1];
                           }
                           return <Cell key={`cell-tag-${index}`} fill={fillColor} />;
@@ -299,13 +320,13 @@ const Statistics = ({
                   </BarChart>
                 </ChartContainer>
               </div>
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-2"> {/* Mudado para flex-col e items-center */}
                 {tagsChartData.map((tagData) => (
                   <Badge 
                     key={tagData.tag} 
-                    className="w-full max-w-xs text-center"
+                    className="w-full max-w-xs text-center" // Para melhor alinhamento
                     style={{ 
-                        borderLeftColor: tagData.rank <= PODIUM_COLORS.length ? PODIUM_COLORS[tagData.rank -1] : BAR_CHART_TAG_COLORS_HARMONIZED[(tagData.rank - 1 - PODIUM_COLORS.length + BAR_CHART_TAG_COLORS_HARMONIZED.length) % BAR_CHART_TAG_COLORS_HARMONIZED.length], 
+                        borderLeftColor: tagData.rank <= PODIUM_COLORS.length ? PODIUM_COLORS[tagData.rank -1] : BAR_CHART_TAG_COLORS_DEFAULT[(tagData.rank - 1 - PODIUM_COLORS.length + BAR_CHART_TAG_COLORS_DEFAULT.length) % BAR_CHART_TAG_COLORS_DEFAULT.length], 
                         borderLeftWidth: 3,
                     }}
                   >
@@ -325,12 +346,13 @@ const Statistics = ({
 // --- Funções Auxiliares ---
 const formatDataParaAPI = (data: Date): string => {
   if (!(data instanceof Date) || isNaN(data.getTime())) {
+    console.warn("formatDataParaAPI recebeu data inválida:", data, "Usando data atual como fallback.");
     const hoje = new Date();
-    return `${hoje.getUTCFullYear()}-${(hoje.getUTCMonth() + 1).toString().padStart(2, '0')}-${hoje.getUTCDate().toString().padStart(2, '0')}`;
+    return `${hoje.getFullYear()}-${(hoje.getMonth() + 1).toString().padStart(2, '0')}-${hoje.getDate().toString().padStart(2, '0')}`;
   }
-  const ano = data.getUTCFullYear();
-  const mes = (data.getUTCMonth() + 1).toString().padStart(2, '0');
-  const dia = data.getUTCDate().toString().padStart(2, '0');
+  const ano = data.getFullYear();
+  const mes = (data.getMonth() + 1).toString().padStart(2, '0');
+  const dia = data.getDate().toString().padStart(2, '0');
   return `${ano}-${mes}-${dia}`;
 };
 
@@ -356,6 +378,7 @@ const App = () => {
   const [generalStats, setGeneralStats] = useState<StatisticsProps['generalStats']>(null);
   const [statusChartData, setStatusChartData] = useState<StatisticsProps['statusChartData']>([]);
   const [activityConcluidasChartData, setActivityConcluidasChartData] = useState<StatisticsProps['activityChartData']>([]);
+  const [activityCriadasChartData, setActivityCriadasChartData] = useState<StatisticsProps['activityCriadasChartData'] | null>(null);
   const [tagsChartData, setTagsChartData] = useState<StatisticsProps['tagsChartData']>([]);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -364,10 +387,12 @@ const App = () => {
 
   const hojeDate = new Date();
   const seteDiasAtrasDate = new Date();
-  seteDiasAtrasDate.setUTCDate(hojeDate.getUTCDate() - 6);
+  seteDiasAtrasDate.setDate(hojeDate.getDate() - 6);
 
   const [startDateConcluidas, setStartDateConcluidas] = useState(formatDataParaAPI(seteDiasAtrasDate));
   const [endDateConcluidas, setEndDateConcluidas] = useState(formatDataParaAPI(hojeDate));
+  const [startDateCriadas, setStartDateCriadas] = useState(formatDataParaAPI(seteDiasAtrasDate));
+  const [endDateCriadas, setEndDateCriadas] = useState(formatDataParaAPI(hojeDate));
 
   useEffect(() => {
     let emailToUse: string | null = userEmail;
@@ -394,31 +419,40 @@ const App = () => {
       setIsLoading(false); return;
     }
     
-    const dStartConcluidas = new Date(startDateConcluidas + "T00:00:00.000Z");
-    const dEndConcluidas = new Date(endDateConcluidas + "T00:00:00.000Z");
+    // Validação das datas antes de fazer o fetch
+    const dStartConcluidas = new Date(startDateConcluidas + "T00:00:00Z"); // Adiciona Z para UTC
+    const dEndConcluidas = new Date(endDateConcluidas + "T00:00:00Z");
+    const dStartCriadas = new Date(startDateCriadas + "T00:00:00Z");
+    const dEndCriadas = new Date(endDateCriadas + "T00:00:00Z");
 
     let datesAreValid = true;
     let dateErrorMessage = "";
 
-    if (isNaN(dStartConcluidas.getTime()) || isNaN(dEndConcluidas.getTime())) {
+    if (isNaN(dStartConcluidas.getTime()) || isNaN(dEndConcluidas.getTime()) || isNaN(dStartCriadas.getTime()) || isNaN(dEndCriadas.getTime())) {
         datesAreValid = false;
-        dateErrorMessage = "Datas do filtro de 'Concluídas' são inválidas.";
+        dateErrorMessage = "Uma ou more datas do filtro são inválidas.";
     } else if (dStartConcluidas > dEndConcluidas) {
         datesAreValid = false;
-        dateErrorMessage = "Filtro 'Concluídas': data de início não pode ser maior que a data de fim.";
+        dateErrorMessage = "Filtro 'Concluídas': data de início após data de fim.";
+    } else if (dStartCriadas > dEndCriadas) {
+        datesAreValid = false;
+        dateErrorMessage = "Filtro 'Criadas': data de início após data de fim.";
     }
 
     if (!datesAreValid) {
-        console.warn("[App useEffect] Datas de filtro inválidas. Fetch abortado.", dateErrorMessage);
+        console.warn("[App useEffect] Datas de filtro inválidas ou intervalo incorreto. Fetch abortado.", dateErrorMessage);
         setInitializationError(dateErrorMessage);
         setIsLoading(false);
+        // Limpar os dados dos gráficos que dependem dessas datas
         setActivityConcluidasChartData([]);
+        setActivityCriadasChartData(null);
+        // Não limpar stats gerais, status e tags, pois não dependem diretamente dessas datas
         return;
     }
     
-    console.log("[App useEffect] Disparado com Email:", emailToUse, "Concluídas:", startDateConcluidas, "-", endDateConcluidas);
+    console.log("[App useEffect] Disparado com Email:", emailToUse, "Concluídas:", startDateConcluidas, "-", endDateConcluidas, "Criadas:", startDateCriadas, "-", endDateCriadas);
 
-    const fetchAllDashboardData = async (email: string, deConcluidas: string, ateConcluidas: string) => {
+    const fetchAllDashboardData = async (email: string, deConcluidas: string, ateConcluidas: string, deCriadas: string, ateCriadas: string) => {
       setIsLoading(true);
       setInitializationError(null);
       const baseUrl = "https://tarefas-banco-estruturado.onrender.com/tarefas";
@@ -427,8 +461,7 @@ const App = () => {
       const statusUrl = `${baseUrl}/status?userId=${email}`;
       const tagsUrl = `${baseUrl}/tags?userId=${email}`;
       const concluidasNoPeriodoUrl = `${baseUrl}/concluidas?userId=${email}&de=${deConcluidas}&ate=${ateConcluidas}`;
-
-      console.log("[fetchAllDashboardData] URLs:", { productivityUrl, statusUrl, tagsUrl, concluidasNoPeriodoUrl });
+      const criadasNoPeriodoUrl = `${baseUrl}/criadasPorPeriodo?userId=${email}&de=${deCriadas}&ate=${ateCriadas}`;
 
       try {
         const [
@@ -446,8 +479,6 @@ const App = () => {
         const statusApiData: ApiStatusData = await statusRes.json();
         const tagsApiData: ApiTagData[] = await tagsRes.json();
         const concluidasPorDiaApiData: ApiConcluidasPorDia = await concluidasNoPeriodoRes.json();
-
-        console.log("[fetchAllDashboardData] Dados JSON (brutos):", { productivityApiData, statusApiData, tagsApiData, concluidasPorDiaApiData });
 
         const pending = statusApiData.pendente ?? 0;
         const inProgress = statusApiData["em andamento"] ?? 0;
@@ -467,10 +498,11 @@ const App = () => {
             .filter(item => item.count > 0).sort((a, b) => b.count - a.count).slice(0, 10);
         setTagsChartData(processedTags);
         
+        // Gráfico de Concluídas
         let diasConcluidasParaGrafico: Date[] = [];
-        let currentConcluidaDate = new Date(dStartConcluidas);
+        let currentConcluidaDate = new Date(dStartConcluidas); // Usa o objeto Date validado
         while(currentConcluidaDate <= dEndConcluidas){
-            diasConcluidasParaGrafico.push(new Date(currentConcluidaDate));
+            diasConcluidasParaGrafico.push(new Date(currentConcluidaDate)); // Cria nova instância para o array
             currentConcluidaDate.setUTCDate(currentConcluidaDate.getUTCDate() + 1);
         }
         
@@ -481,10 +513,37 @@ const App = () => {
             return { dia: diaLabel, tarefasConcluidas: Number(contagem) };
         });
         setActivityConcluidasChartData(processedActivityConcluidas);
-        console.log("[fetchAllDashboardData] Gráfico Concluídas Processado:", JSON.stringify(processedActivityConcluidas));
+
+        // API de Tarefas Criadas
+        try {
+            const criadasResponse = await fetch(criadasNoPeriodoUrl);
+            if (criadasResponse.ok) {
+                const criadasPorDiaApiData: ApiCriadasPorDia = await criadasResponse.json();
+                let diasCriadasParaGraficoList: Date[] = [];
+                let currentCriadaDate = new Date(dStartCriadas); // Usa o objeto Date validado
+                 while(currentCriadaDate <= dEndCriadas){
+                    diasCriadasParaGraficoList.push(new Date(currentCriadaDate));
+                    currentCriadaDate.setUTCDate(currentCriadaDate.getUTCDate() + 1);
+                }
+                const processedActivityCriadas = diasCriadasParaGraficoList.map(dataDia => {
+                    const diaLabel = dataDia.toLocaleDateString('pt-BR', { weekday: 'short', timeZone: 'UTC' }).replace('.', '');
+                    const dataFormatadaChave = formatDataParaAPI(dataDia);
+                    const contagem = criadasPorDiaApiData[dataFormatadaChave] ?? 0;
+                    return { dia: diaLabel, tarefasCriadas: Number(contagem) };
+                });
+                setActivityCriadasChartData(processedActivityCriadas);
+            } else {
+                const errorText = await criadasResponse.text();
+                console.warn(`[fetchAllDashboardData] API Tarefas Criadas (${criadasResponse.status}): ${errorText}. Gráfico não será populado.`);
+                setActivityCriadasChartData(null);
+            }
+        } catch (errorCriadas) {
+            console.error("[fetchAllDashboardData] Erro API tarefas criadas:", errorCriadas);
+            setActivityCriadasChartData(null);
+        }
 
         const totalTasksAtivas = pending + inProgress;
-        const hojeFormatado = formatDataParaAPI(new Date(new Date().toISOString().split('T')[0] + "T00:00:00Z"));
+        const hojeFormatado = formatDataParaAPI(new Date());
         const chaveTarefasCriadasHoje = `tarefas_criadas_${hojeFormatado}`;
         const tarefasCriadasHojeValor = productivityApiData[chaveTarefasCriadasHoje];
         let tasksCreatedTodayNum = 0;
@@ -501,6 +560,7 @@ const App = () => {
           pendingTasks: pending,
           inProgressTasks: inProgress,
           completedTasks: completed,
+          totalComments: 0,
           uniqueTags: processedTags.length,
           avgCompletionTime: formatMillisecondsToReadable(productivityApiData.tempo_medio_conclusao_ms),
           tasksCreatedToday: tasksCreatedTodayNum,
@@ -516,10 +576,11 @@ const App = () => {
       }
     };
     
-    fetchAllDashboardData(emailToUse, startDateConcluidas, endDateConcluidas);
+    fetchAllDashboardData(emailToUse, startDateConcluidas, endDateConcluidas, startDateCriadas, endDateCriadas);
 
-  }, [userEmail, startDateConcluidas, endDateConcluidas]);
+  }, [userEmail, startDateConcluidas, endDateConcluidas, startDateCriadas, endDateCriadas]);
 
+  // Telas de Loading e Erro permanecem as mesmas
   if (isLoading) {
     return (
         <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white p-4">
@@ -541,6 +602,7 @@ const App = () => {
     );
   }
 
+
   return (
     <div className="min-h-screen bg-gray-900 text-gray-200 font-sans">
       <main>
@@ -549,18 +611,16 @@ const App = () => {
           generalStats={generalStats}
           statusChartData={statusChartData}
           activityConcluidasChartData={activityConcluidasChartData}
-          activityCriadasChartData={null} // Removido, mas a prop ainda existe na interface
+          activityCriadasChartData={activityCriadasChartData}
           tagsChartData={tagsChartData}
           startDateConcluidas={startDateConcluidas}
           setStartDateConcluidas={setStartDateConcluidas}
           endDateConcluidas={endDateConcluidas}
           setEndDateConcluidas={setEndDateConcluidas}
-          // Props de datas para tarefas criadas foram removidas do componente Statistics
-          // Para evitar erro de prop não existente, vamos remover da chamada também
-          // startDateCriadas="" // Removido
-          // setStartDateCriadas={() => {}} // Removido
-          // endDateCriadas="" // Removido
-          // setEndDateCriadas={() => {}} // Removido
+          startDateCriadas={startDateCriadas}
+          setStartDateCriadas={setStartDateCriadas}
+          endDateCriadas={endDateCriadas}
+          setEndDateCriadas={setEndDateCriadas}
         />
       </main>
       <footer className="text-center py-4 text-xs text-gray-500">
