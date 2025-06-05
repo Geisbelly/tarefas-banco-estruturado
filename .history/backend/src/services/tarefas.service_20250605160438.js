@@ -436,7 +436,7 @@ export async function atualizarTarefa(id, updates) {
                 console.log(`[COLAB EXISTENTE: ${colabId}] Status alterado: "${statusAntigo}" -> "${statusFinalDaTarefa}" (Tarefa: ${id})`);
                 await atualizarContadorStatus(colabId, statusFinalDaTarefa, 1, statusAntigo);
 
-                if (statusFinalDaTarefa === "concluida" && statusAntigo !== "concluida") {
+                if (statusFinalDaTarefa === "concluida" ) {
                     const ms = (dataConclusaoParaSetar || new Date()) - new Date(tarefaAtual.dataCriacao);
                     await atualizarEstatisticasProdutividade(colabId, ms, false, false, true);
                     await registrarConclusaoPorData(colabId, formatDataParaAPI(dataConclusaoParaSetar || new Date()));

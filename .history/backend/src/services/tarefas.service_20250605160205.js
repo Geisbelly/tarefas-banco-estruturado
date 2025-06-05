@@ -351,10 +351,10 @@ export async function atualizarTarefa(id, updates) {
       console.log(`[CRIADOR: ${criadorId}] Status alterado: "${statusAntigo}" -> "${statusFinalDaTarefa}" (Tarefa: ${id})`);
       await atualizarContadorStatus(criadorId, statusFinalDaTarefa, 1, statusAntigo);
 
-      if (statusFinalDaTarefa === "concluida" && statusAntigo !== "concluida") {
+      if (statusFinalDaTarefa === "concluida" ) {
         const ms = (dataConclusaoParaSetar || new Date()) - new Date(tarefaAtual.dataCriacao);
         await atualizarEstatisticasProdutividade(criadorId, ms, false, false, true);
-        await registrarConclusaoPorData(criadorId, dataConclusaoParaSetar || new Date());
+        await registrarConclusaoPorData(criadorId, formatDataParaAPI(dataConclusaoParaSetar || new Date()));
       } else if (statusAntigo === "concluida") {
         const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
         const ms =  dataConclusaoAnterior - new Date(tarefaAtual.dataCriacao);
@@ -436,7 +436,7 @@ export async function atualizarTarefa(id, updates) {
                 console.log(`[COLAB EXISTENTE: ${colabId}] Status alterado: "${statusAntigo}" -> "${statusFinalDaTarefa}" (Tarefa: ${id})`);
                 await atualizarContadorStatus(colabId, statusFinalDaTarefa, 1, statusAntigo);
 
-                if (statusFinalDaTarefa === "concluida" && statusAntigo !== "concluida") {
+                if (statusFinalDaTarefa === "concluida") {
                     const ms = (dataConclusaoParaSetar || new Date()) - new Date(tarefaAtual.dataCriacao);
                     await atualizarEstatisticasProdutividade(colabId, ms, false, false, true);
                     await registrarConclusaoPorData(colabId, formatDataParaAPI(dataConclusaoParaSetar || new Date()));

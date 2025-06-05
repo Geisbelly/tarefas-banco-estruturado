@@ -313,6 +313,7 @@ export async function atualizarTarefa(id, updates) {
       if (statusNovoProposto === "concluida" && statusAntigo !== "concluida") {
         dataConclusaoParaSetar = new Date();
         dadosFiltrados.dataConclusao = dataConclusaoParaSetar;
+        await 
       } else if (statusAntigo === "concluida" && statusNovoProposto !== "concluida") {
         dataConclusaoParaSetar = null;
         dadosFiltrados.dataConclusao = dataConclusaoParaSetar;
@@ -351,15 +352,15 @@ export async function atualizarTarefa(id, updates) {
       console.log(`[CRIADOR: ${criadorId}] Status alterado: "${statusAntigo}" -> "${statusFinalDaTarefa}" (Tarefa: ${id})`);
       await atualizarContadorStatus(criadorId, statusFinalDaTarefa, 1, statusAntigo);
 
-      if (statusFinalDaTarefa === "concluida" && statusAntigo !== "concluida") {
+      if (statusFinalDaTarefa === "concluida") {
         const ms = (dataConclusaoParaSetar || new Date()) - new Date(tarefaAtual.dataCriacao);
         await atualizarEstatisticasProdutividade(criadorId, ms, false, false, true);
-        await registrarConclusaoPorData(criadorId, dataConclusaoParaSetar || new Date());
+        await registrarConclusaoPorData(criadorId, formatDataParaAPI(dataConclusaoParaSetar || new Date()));
       } else if (statusAntigo === "concluida") {
         const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
-        const ms =  dataConclusaoAnterior - new Date(tarefaAtual.dataCriacao);
+        const ms = new Date(tarefaAtual.dataCriacao) - dataConclusaoAnterior;
         await atualizarEstatisticasProdutividade(criadorId, ms, true, false, false);
-        await reverterConclusaoTarefa(colabId, dataConclusaoAnterior,-ms);
+        await removerConclusaoPorData(criadorId, formatDataParaAPI(dataConclusaoAnterior));
       }
     }
     if (updates.hasOwnProperty('tags')) {
@@ -389,7 +390,7 @@ export async function atualizarTarefa(id, updates) {
                     const tempoConclusao = dataConclusaoParaSetar || new Date();
                     const ms = tempoConclusao - new Date(tarefaAtual.dataCriacao);
                     await atualizarEstatisticasProdutividade(colabId, ms, false, true, true);
-                    await registrarConclusaoPorData(colabId, dataConclusaoParaSetar);
+                    await registrarConclusaoPorData(colabId, formatDataParaAPI(tempoConclusao));
                 } else {
                     await atualizarEstatisticasProdutividade(colabId, null, false, true, false);
                 }
@@ -407,9 +408,9 @@ export async function atualizarTarefa(id, updates) {
 
                 if (statusAntigo === "concluida") {
                     const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
-                    const ms =  dataConclusaoAnterior - new Date(tarefaAtual.dataCriacao);
+                    const ms = new Date(tarefaAtual.dataCriacao) - dataConclusaoAnterior;
                     await atualizarEstatisticasProdutividade(colabId, ms, true, false, false);
-                    await reverterConclusaoTarefa(colabId, dataConclusaoAnterior,-ms);
+                    await removerConclusaoPorData(colabId, formatDataParaAPI(dataConclusaoAnterior));
                 } else {
                     await atualizarEstatisticasProdutividade(colabId, null, true, false, false);
                 }
@@ -436,15 +437,15 @@ export async function atualizarTarefa(id, updates) {
                 console.log(`[COLAB EXISTENTE: ${colabId}] Status alterado: "${statusAntigo}" -> "${statusFinalDaTarefa}" (Tarefa: ${id})`);
                 await atualizarContadorStatus(colabId, statusFinalDaTarefa, 1, statusAntigo);
 
-                if (statusFinalDaTarefa === "concluida" && statusAntigo !== "concluida") {
+                if (statusFinalDaTarefa === "concluida") {
                     const ms = (dataConclusaoParaSetar || new Date()) - new Date(tarefaAtual.dataCriacao);
                     await atualizarEstatisticasProdutividade(colabId, ms, false, false, true);
                     await registrarConclusaoPorData(colabId, formatDataParaAPI(dataConclusaoParaSetar || new Date()));
                 } else if (statusAntigo === "concluida") {
                     const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
-                    const ms = dataConclusaoAnterior -  new Date(tarefaAtual.dataCriacao);
+                    const ms = - dataConclusaoAnterior;
                     await atualizarEstatisticasProdutividade(colabId, ms, true, false, false);
-                    await reverterConclusaoTarefa(colabId, formatDataParaAPI(dataConclusaoAnterior),-ms);
+                    await reverterConclusaoTarefa(colabId, formatDataParaAPI(dataConclusaoAnterior));
                 }
             }
 
