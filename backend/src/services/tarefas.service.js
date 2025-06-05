@@ -199,17 +199,75 @@ export async function buscarTarefasPorTags(tags) {
   }
 }
 
+
+//ANTIGO, CASO DE ERRO VOLTE AQUI
+// export async function atualizarTarefa(id, updates) {
+//   let tarefasCollection;
+
+//   try {
+//     tarefasCollection = await connectToMongoDB(dbName, collectionName);
+
+//     if (!ObjectId.isValid(id)) return false;
+
+//     const tarefaAtual = await tarefasCollection.findOne({ _id: new ObjectId(id) });
+//     if (!tarefaAtual) return false;
+
+//     const dadosFiltrados = Object.fromEntries(
+//       Object.entries(updates).filter(([chave]) => chave !== "_id" && chave !== "id")
+//     );
+
+//     const result = await tarefasCollection.updateOne(
+//       { _id: new ObjectId(id) },
+//       { $set: dadosFiltrados }
+//     );
+
+//     // Atualiza contadores no Redis se status mudou
+//     if (updates.status && updates.status !== tarefaAtual.status) {
+//       console.log(`Status alterado de "${tarefaAtual.status}" para "${updates.status}"`);
+//       await atualizarContadorStatus(tarefaAtual.criador, updates.status, 1, tarefaAtual.status);
+//       if (updates.status === "concluida") {
+//         console.log("Registrando conclusão diária e atualizando estatísticas de produtividade...");
+//         await registrarConclusaoPorData(tarefaAtual.criador);
+//         await atualizarEstatisticasProdutividade(tarefaAtual.criador);
+//       }
+//     }
+//     if (updates.tags) {
+//       console.log("Atualizando ranking de tags...");
+//       await atualizarRankingTags(tarefaAtual.criador, updates.tags);
+//     }
+
+//     return result.modifiedCount > 0;
+//   } catch (err) {
+//     console.error(`Erro ao atualizar tarefa com ID ${id}:`, err);
+//     return false;
+//   } finally {
+//     if (tarefasCollection) await closeMongoDBConnection();
+//   }
+// }
+
+//CASO DE ERRO APAGUE AQUI
 export async function atualizarTarefa(id, updates) {
   let tarefasCollection;
+  // let mongoClient; // Se connectToMongoDB retorna o client para fechar depois
 
   try {
-    tarefasCollection = await connectToMongoDB(dbName, collectionName);
+    // Se connectToMongoDB retorna { collection, client }
+    const mongoConnection = await connectToMongoDB(dbName, collectionName);
+    tarefasCollection = mongoConnection.collection;
+    // mongoClient = mongoConnection.client; // Para fechar a conexão no finally
 
-    if (!ObjectId.isValid(id)) return false;
+    if (!ObjectId.isValid(id)) {
+      console.warn(`ID inválido fornecido para atualização: ${id}`);
+      return false;
+    }
 
     const tarefaAtual = await tarefasCollection.findOne({ _id: new ObjectId(id) });
-    if (!tarefaAtual) return false;
+    if (!tarefaAtual) {
+      console.warn(`Tarefa com ID ${id} não encontrada para atualização.`);
+      return false;
+    }
 
+    // Filtra _id e id para não serem setados diretamente
     const dadosFiltrados = Object.fromEntries(
       Object.entries(updates).filter(([chave]) => chave !== "_id" && chave !== "id")
     );
@@ -221,28 +279,40 @@ export async function atualizarTarefa(id, updates) {
 
     // Atualiza contadores no Redis se status mudou
     if (updates.status && updates.status !== tarefaAtual.status) {
-      console.log(`Status alterado de "${tarefaAtual.status}" para "${updates.status}"`);
+      console.log(`Status alterado de "${tarefaAtual.status}" para "${updates.status}" para tarefa ${id}`);
       await atualizarContadorStatus(tarefaAtual.criador, updates.status, 1, tarefaAtual.status);
       if (updates.status === "concluida") {
-        console.log("Registrando conclusão diária e atualizando estatísticas de produtividade...");
+        console.log(`Registrando conclusão diária e atualizando estatísticas de produtividade para criador ${tarefaAtual.criador}...`);
         await registrarConclusaoPorData(tarefaAtual.criador);
         await atualizarEstatisticasProdutividade(tarefaAtual.criador);
       }
     }
-    if (updates.tags) {
-      console.log("Atualizando ranking de tags...");
-      await atualizarRankingTags(tarefaAtual.criador, updates.tags);
+
+    // Lógica de atualização de tags
+    // Verifica se a propriedade 'tags' está presente em 'updates'.
+    // Isso permite que um array vazio [] seja passado para remover todas as tags.
+    if (updates.hasOwnProperty('tags')) {
+      console.log(`Iniciando atualização do ranking de tags para criador ${tarefaAtual.criador}...`);
+      const tagsAntigas = tarefaAtual.tags || []; // Tags antes da atualização (garante array)
+      const tagsNovas = updates.tags || [];     // Novas tags (garante array)
+
+      // Só chama a atualização do ranking se houver de fato uma mudança ou se for a primeira vez (tagsAntigas é vazio e tagsNovas tem algo)
+      // Para simplificar, vamos chamar sempre que 'tags' for parte do update,
+      // a função atualizarRankingTags cuidará da lógica de incremento/decremento.
+      await atualizarRankingTags(tarefaAtual.criador, tagsNovas, tagsAntigas);
     }
 
     return result.modifiedCount > 0;
   } catch (err) {
     console.error(`Erro ao atualizar tarefa com ID ${id}:`, err);
-    return false;
+    return false; // ou throw err; dependendo de como você quer tratar erros mais acima
   } finally {
+    // Fechar a conexão se ela foi aberta nesta função e não é global/gerenciada por pool
+    // if (mongoClient) await closeMongoDBConnection(mongoClient);
+    // Se closeMongoDBConnection não recebe client ou gerencia globalmente:
     if (tarefasCollection) await closeMongoDBConnection();
   }
 }
-
 
 export async function adicionarComentario(tarefaId, autor, texto) {
   let tarefasCollection;
@@ -385,16 +455,73 @@ export async function registrarConclusaoPorData(userId) {
   }
 }
 
-export async function atualizarRankingTags(userId, tags = []) {
+// Se der erro, volte aqui
+// export async function atualizarRankingTags(userId, tags = []) {
+//   const chave = `user:${userId}:tags:top`;
+
+//   try {
+//     for (const tag of tags) {
+//       await redis.zIncrBy(chave, 1, tag); // incrementa a pontuação da tag
+//     }
+//     console.log(`🏷️ Tags atualizadas para o ranking: ${tags.join(', ')}`);
+//   } catch (error) {
+//     console.error(`❌ Erro ao atualizar ranking de tags:`, error);
+//   }
+// }
+
+export async function atualizarRankingTags(userId, tagsNovas = [], tagsAntigas = []) {
   const chave = `user:${userId}:tags:top`;
 
-  try {
-    for (const tag of tags) {
-      await redis.zIncrBy(chave, 1, tag); // incrementa a pontuação da tag
+  // Usar Sets para facilitar a identificação de diferenças
+  const setTagsNovas = new Set(tagsNovas.map(tag => String(tag).trim()).filter(tag => tag.length > 0));
+  const setTagsAntigas = new Set(tagsAntigas.map(tag => String(tag).trim()).filter(tag => tag.length > 0));
+
+  const tagsParaIncrementar = [];
+  const tagsParaDecrementar = [];
+
+  // Identificar tags adicionadas (estão em novas, mas não em antigas)
+  for (const tag of setTagsNovas) {
+    if (!setTagsAntigas.has(tag)) {
+      tagsParaIncrementar.push(tag);
     }
-    console.log(`🏷️ Tags atualizadas para o ranking: ${tags.join(', ')}`);
+  }
+
+  // Identificar tags removidas (estavam em antigas, mas não mais em novas)
+  for (const tag of setTagsAntigas) {
+    if (!setTagsNovas.has(tag)) {
+      tagsParaDecrementar.push(tag);
+    }
+  }
+
+  if (tagsParaIncrementar.length === 0 && tagsParaDecrementar.length === 0) {
+    console.log(`🏷️ Ranking de tags não precisou de alteração para usuário ${userId} (tags inalteradas ou sem tags válidas).`);
+    return;
+  }
+
+  try {
+    // Incrementar score para tags adicionadas/novas
+    for (const tag of tagsParaIncrementar) {
+      await redis.zIncrBy(chave, 1, tag);
+      console.log(`🏷️ Tag '${tag}' incrementada (+1) no ranking para usuário ${userId}`);
+    }
+
+    // Decrementar score para tags removidas
+    for (const tag of tagsParaDecrementar) {
+      await redis.zIncrBy(chave, -1, tag); // Decrementa a pontuação
+      console.log(`🏷️ Tag '${tag}' decrementada (-1) no ranking para usuário ${userId}`);
+
+      // Opcional: Remover a tag do sorted set se a pontuação ficar muito baixa (ex: 0 ou menos)
+      // Isso evita que tags não usadas fiquem permanentemente no sorted set.
+      // const score = await redis.zScore(chave, tag);
+      // if (score !== null && parseFloat(score) <= 0) {
+      //   await redis.zRem(chave, tag);
+      //   console.log(`🏷️ Tag '${tag}' removida do ranking (score <= 0) para usuário ${userId}`);
+      // }
+    }
+    console.log(`🏷️ Ranking de tags atualizado para usuário ${userId}. Adicionadas: [${tagsParaIncrementar.join(', ')}]. Removidas: [${tagsParaDecrementar.join(', ')}].`);
+
   } catch (error) {
-    console.error(`❌ Erro ao atualizar ranking de tags:`, error);
+    console.error(`❌ Erro ao atualizar ranking de tags para usuário ${userId}:`, error);
   }
 }
 
