@@ -468,7 +468,7 @@ export async function registrarConclusaoPorData(userId, dataConclusao = null) {
   const chave = `user:${userId}:tasks:completed:${data}`;
 
   try {
-    if (dataConclusao!==null) {
+    if (dataConclusao!==) {
       // Se dataConclusao foi passada: está removendo uma conclusão
       const valorAtual = await redis.get(chave);
       if (valorAtual && parseInt(valorAtual) > 0) {

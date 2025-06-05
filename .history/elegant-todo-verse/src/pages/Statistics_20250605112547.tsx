@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { BarChart3, PieChart as PieChartIcon, ListChecks, MessageSquare, Tags, CheckCircle, Clock, Zap, CalendarCheck2, TrendingUp, Info, Filter } from 'lucide-react';
@@ -43,7 +42,7 @@ const Badge = ({ className, children, style }: { className?: string; children: R
 const ChartContainer = ({ children }: { children: React.ReactElement }) => (
   <ResponsiveContainer width="100%" height="100%">{children}</ResponsiveContainer>
 );
-const CustomChartTooltipContent = (props: any) => {
+const CustomChartTooltipContent = (props: unknown) => {
   const { active, payload, label } = props;
   if (active && payload && payload.length) {
     return (

@@ -282,7 +282,7 @@ export async function atualizarTarefa(id, updates) {
         console.log('Incrementando estatísticas');
         const ms = new Date() - new Date(tarefaAtual.dataCriacao);
         await atualizarEstatisticasProdutividade(tarefaAtual.criador, ms); // incrementa
-        await registrarConclusaoPorData(tarefaAtual.criador);
+        await registrarConclusaoPorData(tarefaAtual.criador,tarefaAtual.);
       }
 
       // Tarefa voltando para pendente

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { BarChart3, PieChart as PieChartIcon, ListChecks, MessageSquare, Tags, CheckCircle, Clock, Zap, CalendarCheck2, TrendingUp, Info, Filter } from 'lucide-react';
@@ -356,7 +355,7 @@ const formatMillisecondsToReadable = (ms: number | undefined | null): string => 
 const App = () => {
   const [generalStats, setGeneralStats] = useState<StatisticsProps['generalStats']>(null);
   const [statusChartData, setStatusChartData] = useState<StatisticsProps['statusChartData']>([]);
-  const [activityConcluidasChartData, setActivityConcluidasChartData] = useState<StatisticsProps['activityConcluidasChartData']>([]);
+  const [activityConcluidasChartData, setActivityConcluidasChartData] = useState<StatisticsProps['activityChartData']>([]);
   const [tagsChartData, setTagsChartData] = useState<StatisticsProps['tagsChartData']>([]);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -468,8 +467,8 @@ const App = () => {
             .filter(item => item.count > 0).sort((a, b) => b.count - a.count).slice(0, 10);
         setTagsChartData(processedTags);
         
-        const diasConcluidasParaGrafico: Date[] = [];
-        const currentConcluidaDate = new Date(dStartConcluidas);
+        let diasConcluidasParaGrafico: Date[] = [];
+        let currentConcluidaDate = new Date(dStartConcluidas);
         while(currentConcluidaDate <= dEndConcluidas){
             diasConcluidasParaGrafico.push(new Date(currentConcluidaDate));
             currentConcluidaDate.setUTCDate(currentConcluidaDate.getUTCDate() + 1);
