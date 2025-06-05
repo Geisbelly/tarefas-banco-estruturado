@@ -548,29 +548,29 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
     }
 
     // --- Colaboradores adicionados ---
-    for (const colaborador of adicionados) {
-      console.log(`Incrementando métricas para novo colaborador: ${colaborador}`);
-      
-      await atualizarContadorStatus(colaborador, statusNovo, 1);
-      await atualizarRankingTags(colaborador, tagsNovas, []);
+for (const colaborador of adicionados) {
+  console.log(`Incrementando métricas para novo colaborador: ${colaborador}`);
+  
+  await atualizarContadorStatus(colaborador, statusNovo, 1);
+  await atualizarRankingTags(colaborador, tagsNovas, []);
 
-      const isConcluida = statusNovo === "concluida";
-      const tempo = isConcluida
-        ? new Date(tarefaAtual.dataConclusao) - new Date(tarefaAtual.dataCriacao)
-        : 0;
+  const isConcluida = statusNovo === "concluida";
+  const tempo = isConcluida
+    ? new Date(tarefaAtual.dataConclusao) - new Date(tarefaAtual.dataCriacao)
+    : 0;
 
-      await atualizarEstatisticasProdutividade(
-        colaborador,
-        tempo,
-        isConcluida,
-        true,  // <- sempre marca como "criada"
-        false
-      );
+  await atualizarEstatisticasProdutividade(
+    colaborador,
+    tempo,
+    isConcluida,
+    true,  // <- sempre marca como "criada"
+    false
+  );
 
-      if (isConcluida) {
-        await registrarConclusaoPorData(colaborador);
-      }
-    }
+  if (isConcluida) {
+    await registrarConclusaoPorData(colaborador);
+  }
+}
 
 
 

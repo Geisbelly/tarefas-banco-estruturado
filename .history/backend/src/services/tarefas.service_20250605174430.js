@@ -549,54 +549,32 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
 
     // --- Colaboradores adicionados ---
     for (const colaborador of adicionados) {
+      userId, tempoConclusaoMs = null, atualizarConclusao=false, criada=false, decremet=false
       console.log(`Incrementando métricas para novo colaborador: ${colaborador}`);
-      
       await atualizarContadorStatus(colaborador, statusNovo, 1);
       await atualizarRankingTags(colaborador, tagsNovas, []);
-
-      const isConcluida = statusNovo === "concluida";
-      const tempo = isConcluida
-        ? new Date(tarefaAtual.dataConclusao) - new Date(tarefaAtual.dataCriacao)
-        : 0;
-
-      await atualizarEstatisticasProdutividade(
-        colaborador,
-        tempo,
-        isConcluida,
-        true,  // <- sempre marca como "criada"
-        false
-      );
-
-      if (isConcluida) {
+      if (statusNovo === "concluida") {
+        const ms = new Date() - new Date(tarefaAtual.dataCriacao);
+        await atualizarEstatisticasProdutividade(colaborador, ms,false,true,false);
         await registrarConclusaoPorData(colaborador);
+      }else{
+        await atualizarEstatisticasProdutividade(colaborador, 0,false,true,false);
       }
     }
-
-
 
     // --- Colaboradores removidos ---
     for (const colaborador of removidos) {
       console.log(`Removendo métricas de colaborador: ${colaborador}`);
       await atualizarContadorStatus(colaborador, statusAntigo, -1);
       await atualizarRankingTags(colaborador, [], tagsAntigas);
-
-      const isConcluida = statusAntigo === "concluida";
-      const tempo = isConcluida ? (new Date(tarefaAtual.dataConclusao) - new Date(tarefaAtual.dataCriacao)) : 0;
-
-      await atualizarEstatisticasProdutividade(
-        colaborador,
-        isConcluida ? -tempo : 0,
-        isConcluida,
-        false,
-        true,
-        tarefaAtual.dataCriacao
-      );
-
-      if (isConcluida) {
-        await reverterConclusaoTarefa(colaborador, tarefaAtual.dataConclusao, tempo);
+      if (statusAntigo === "concluida") {
+        const ms =  new Date(tarefaAtual.dataCriacao) - new Date(tarefaAtual.dataConclusao);
+        await atualizarEstatisticasProdutividade(colaborador, -ms, true,false,true,tarefaAtual.dataCriacao);
+        await reverterConclusaoTarefa(colaborador, tarefaAtual.dataConclusao, ms);
+      }else{
+        await atualizarEstatisticasProdutividade(colaborador, 0, null,false,true,tarefaAtual.dataCriacao);
       }
     }
-
 
     // --- Colaboradores mantidos (status ou tags mudaram) ---
     if (mudouStatus || updates.hasOwnProperty('tags')) {

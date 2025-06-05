@@ -550,28 +550,19 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
     // --- Colaboradores adicionados ---
     for (const colaborador of adicionados) {
       console.log(`Incrementando métricas para novo colaborador: ${colaborador}`);
-      
       await atualizarContadorStatus(colaborador, statusNovo, 1);
       await atualizarRankingTags(colaborador, tagsNovas, []);
 
-      const isConcluida = statusNovo === "concluida";
-      const tempo = isConcluida
-        ? new Date(tarefaAtual.dataConclusao) - new Date(tarefaAtual.dataCriacao)
-        : 0;
+      const tempo = new Date(tarefaAtual.dataConclusao || new Date()) - new Date(tarefaAtual.dataCriacao);
 
-      await atualizarEstatisticasProdutividade(
-        colaborador,
-        tempo,
-        isConcluida,
-        true,  // <- sempre marca como "criada"
-        false
-      );
+      const isConcluida = statusNovo === "concluida";
+
+      await atualizarEstatisticasProdutividade(colaborador, isConcluida ? tempo : 0, false, true, false);
 
       if (isConcluida) {
         await registrarConclusaoPorData(colaborador);
       }
     }
-
 
 
     // --- Colaboradores removidos ---
