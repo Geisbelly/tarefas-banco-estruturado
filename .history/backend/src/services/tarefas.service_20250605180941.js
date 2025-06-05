@@ -515,9 +515,7 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
     const statusNovo = updates.status || statusAntigo;
     const mudouStatus = updates.status !== statusAntigo;
 
-    const tagsAntigas = tarefaAtual.tags || [];
-    const tagsNovas = updates.tags || tagsAntigas;
-
+    // --- Preparar listas de colaboradores ---
     const antigos = new Set(tarefaAtual.colaboradores || []);
     const novos = new Set(updates.colaboradores || []);
 
@@ -544,32 +542,38 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
     }
 
     if (updates.hasOwnProperty('tags')) {
+      const tagsAntigas = tarefaAtual.tags || [];
+      const tagsNovas = updates.tags || [];
       await atualizarRankingTags(tarefaAtual.criador, tagsNovas, tagsAntigas);
     }
 
     // --- Colaboradores adicionados ---
     for (const colaborador of adicionados) {
       console.log(`Incrementando métricas para novo colaborador: ${colaborador}`);
-
+      
       await atualizarContadorStatus(colaborador, statusNovo, 1);
       await atualizarRankingTags(colaborador, tagsNovas, []);
 
       const isConcluida = statusNovo === "concluida";
-      const tempo = isConcluida ? new Date(tarefaAtual.dataConclusao) - new Date(tarefaAtual.dataCriacao) : 0;
+      const tempo = isConcluida
+        ? new Date(tarefaAtual.dataConclusao) - new Date(tarefaAtual.dataCriacao)
+        : 0;
 
-      await atualizarEstatisticasProdutividade(
-        colaborador,
-        tempo,
-        isConcluida,
-        true,
-        false,
-        tarefaAtual.dataCriacao
-      );
+      isConcluida ? await atualizarEstatisticasProdutividade(
+  colaborador,
+  tempoConclusaoMs,
+  false, // atualizarConclusao
+  true,  // criada
+  false, // decrement
+  dataCriacao
+);
 
       if (isConcluida) {
         await registrarConclusaoPorData(colaborador);
       }
     }
+
+
 
     // --- Colaboradores removidos ---
     for (const colaborador of removidos) {
@@ -594,12 +598,14 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
       }
     }
 
-    // --- Colaboradores mantidos ---
+
+    // --- Colaboradores mantidos (status ou tags mudaram) ---
     if (mudouStatus || updates.hasOwnProperty('tags')) {
       for (const colaborador of mantidos) {
         console.log(`Atualizando métricas de colaborador mantido: ${colaborador}`);
 
         if (mudouStatus) {
+          // Tira do status antigo, coloca no novo
           await atualizarContadorStatus(colaborador, statusNovo, 1, statusAntigo);
 
           if (statusNovo === "concluida") {
@@ -609,17 +615,20 @@ export async function atualizarMetricasTarefa(tarefaAtual, updates) {
           }
 
           if (statusAntigo === "concluida" && statusNovo !== "concluida") {
-            const ms = new Date(tarefaAtual.dataConclusao) - new Date(tarefaAtual.dataCriacao);
+            const ms =  new Date(tarefaAtual.dataCriacao) - new Date(tarefaAtual.dataConclusao);
             await atualizarEstatisticasProdutividade(colaborador, -ms, true);
             await registrarConclusaoPorData(colaborador, tarefaAtual.dataConclusao);
           }
         }
 
         if (updates.hasOwnProperty('tags')) {
+          const tagsAntigas = tarefaAtual.tags || [];
+          const tagsNovas = updates.tags || [];
           await atualizarRankingTags(colaborador, tagsNovas, tagsAntigas);
         }
       }
     }
+
   } catch (error) {
     console.error("Erro ao atualizar métricas da tarefa:", error);
   }
