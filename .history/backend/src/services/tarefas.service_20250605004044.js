@@ -404,12 +404,9 @@ export async function deletarTarefa(id) {
       if  (tarefa.dataConclusao){
         ms = new Date(tarefa.dataCriacao) - new Date(tarefa.dataConclusao);
         await registrarConclusaoPorData(tarefa.criador, tarefa.dataConclusao); // remove de concluídos
-        await atualizarEstatisticasProdutividade(tarefa.criador, ms, true, true); 
-      }else{
-        await atualizarEstatisticasProdutividade(tarefa.criador, 0, false, true); 
       }
       
-      
+      await atualizarEstatisticasProdutividade(tarefa.criador, ms, true, true); 
       
       console.log(`Tarefa com ID ${id} excluída com sucesso!`);
       return true;

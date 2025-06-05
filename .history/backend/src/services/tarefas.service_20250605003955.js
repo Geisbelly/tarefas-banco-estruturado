@@ -404,12 +404,9 @@ export async function deletarTarefa(id) {
       if  (tarefa.dataConclusao){
         ms = new Date(tarefa.dataCriacao) - new Date(tarefa.dataConclusao);
         await registrarConclusaoPorData(tarefa.criador, tarefa.dataConclusao); // remove de concluídos
-        await atualizarEstatisticasProdutividade(tarefa.criador, ms, true, true); 
-      }else{
-        await atualizarEstatisticasProdutividade(tarefa.criador, 0, false, true); 
       }
       
-      
+      await atualizarEstatisticasProdutividade(tarefa.criador, ms, true); 
       
       console.log(`Tarefa com ID ${id} excluída com sucesso!`);
       return true;
@@ -553,7 +550,7 @@ export async function atualizarRankingTags(userId, tagsNovas = [], tagsAntigas =
   }
 }
 
-export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoMs = null, atualizarConclusao=false, criada=false, decremet=false) {
+export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoMs = null, atualizarConclusao=false, criada=false) {
   const chave = `user:${userId}:stats:productivity`;
 
   try {
@@ -562,8 +559,8 @@ export async function atualizarEstatisticasProdutividade(userId, tempoConclusaoM
     // Incrementa contador de tarefas criadas hoje
     if(criada){
       await redis.hIncrBy(chave, `tarefas_criadas_${hoje}`, 1);
-    } else if (decremet){
-      await redis.hIncrBy(chave, `tarefas_criadas_${hoje}`, -1);
+    } else if (){
+      
     }
     
 
