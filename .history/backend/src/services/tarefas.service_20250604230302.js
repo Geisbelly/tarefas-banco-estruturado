@@ -465,7 +465,7 @@ export async function reverterConclusaoTarefa(userId, dataConclusao, tempoConclu
 export async function getTagsMaisUsadas(userId) {
   const chave = `user:${userId}:tags:top`;
   // Retorna do índice 0 ao 9, com scores
-  return await redis.zrevrange(chave, 0, 9, 'WITHSCORES');
+  return await redis.z(chave, 0, 9, 'WITHSCORES');
 }
 
 // TAREFAS CONCLUÍDAS POR DIA (intervalo de datas)
