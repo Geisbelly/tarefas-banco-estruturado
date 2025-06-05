@@ -467,7 +467,7 @@ export async function buscarTarefasPorTags(tags) {
 // }
 
 async function atualizarTarefaNoBanco(id, updates) {
-  const tarefasCollection = await connectToMongoDB(dbName, collectionName);
+  const tarefasCollection = await getMongoDBCollection("tarefas");
 
   const tarefaAtual = await tarefasCollection.findOne({ _id: id });
   if (!tarefaAtual) throw new Error("Tarefa não encontrada");
@@ -583,7 +583,7 @@ async function atualizarMetricasDaTarefa(tarefaAntiga, tarefaNova) {
   }
 }
 
-export async function atualizarTarefa(id, updates) {
+async function atualizarTarefaERecalcularMetricas(id, updates) {
   try {
     const { atualizado, anterior, atualizadoDoc } = await atualizarTarefaNoBanco(id, updates);
     if (!atualizado) return false;

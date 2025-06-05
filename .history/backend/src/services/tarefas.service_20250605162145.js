@@ -283,191 +283,191 @@ export async function buscarTarefasPorTags(tags) {
 
 //CASO DE ERRO APAGUE AQUI
 
-// export async function atualizarTarefa(id, updates) {
-//   let tarefasCollection;
+export async function atualizarTarefa(id, updates) {
+  let tarefasCollection;
 
-//   try {
-//     tarefasCollection = await connectToMongoDB(dbName, collectionName);
+  try {
+    tarefasCollection = await connectToMongoDB(dbName, collectionName);
 
-//     if (!ObjectId.isValid(id)) {
-//       console.error(`ID inválido fornecido para atualização: ${id}`);
-//       return false;
-//     }
+    if (!ObjectId.isValid(id)) {
+      console.error(`ID inválido fornecido para atualização: ${id}`);
+      return false;
+    }
 
-//     const tarefaAtual = await tarefasCollection.findOne({ _id: new ObjectId(id) });
-//     if (!tarefaAtual) {
-//       console.warn(`Tarefa com ID ${id} não encontrada para atualização.`);
-//       return false;
-//     }
+    const tarefaAtual = await tarefasCollection.findOne({ _id: new ObjectId(id) });
+    if (!tarefaAtual) {
+      console.warn(`Tarefa com ID ${id} não encontrada para atualização.`);
+      return false;
+    }
 
-//     const dadosFiltrados = Object.fromEntries(
-//       Object.entries(updates).filter(([chave]) => chave !== "_id" && chave !== "id")
-//     );
+    const dadosFiltrados = Object.fromEntries(
+      Object.entries(updates).filter(([chave]) => chave !== "_id" && chave !== "id")
+    );
 
-//     // Determinar dataConclusao com base na mudança de status
-//     const statusAntigo = tarefaAtual.status;
-//     const statusNovoProposto = updates.status; // Pode ser undefined se não estiver no updates
-//     let dataConclusaoParaSetar = tarefaAtual.dataConclusao; // Mantém a atual por padrão
+    // Determinar dataConclusao com base na mudança de status
+    const statusAntigo = tarefaAtual.status;
+    const statusNovoProposto = updates.status; // Pode ser undefined se não estiver no updates
+    let dataConclusaoParaSetar = tarefaAtual.dataConclusao; // Mantém a atual por padrão
 
-//     if (statusNovoProposto) {
-//       if (statusNovoProposto === "concluida" && statusAntigo !== "concluida") {
-//         dataConclusaoParaSetar = new Date();
-//         dadosFiltrados.dataConclusao = dataConclusaoParaSetar;
-//       } else if (statusAntigo === "concluida" && statusNovoProposto !== "concluida") {
-//         dataConclusaoParaSetar = null;
-//         dadosFiltrados.dataConclusao = dataConclusaoParaSetar;
-//       }
-//     } else if (dadosFiltrados.hasOwnProperty('dataConclusao')) {
-//       // Se o status não está mudando, mas dataConclusao está sendo alterada explicitamente
-//       dataConclusaoParaSetar = dadosFiltrados.dataConclusao;
-//     }
+    if (statusNovoProposto) {
+      if (statusNovoProposto === "concluida" && statusAntigo !== "concluida") {
+        dataConclusaoParaSetar = new Date();
+        dadosFiltrados.dataConclusao = dataConclusaoParaSetar;
+      } else if (statusAntigo === "concluida" && statusNovoProposto !== "concluida") {
+        dataConclusaoParaSetar = null;
+        dadosFiltrados.dataConclusao = dataConclusaoParaSetar;
+      }
+    } else if (dadosFiltrados.hasOwnProperty('dataConclusao')) {
+      // Se o status não está mudando, mas dataConclusao está sendo alterada explicitamente
+      dataConclusaoParaSetar = dadosFiltrados.dataConclusao;
+    }
     
-//     const result = await tarefasCollection.updateOne(
-//       { _id: new ObjectId(id) },
-//       { $set: dadosFiltrados }
-//     );
+    const result = await tarefasCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: dadosFiltrados }
+    );
 
-//     // --- Lógica de Atualização de Métricas ---
-//     const criadorId = tarefaAtual.criador;
-//     const statusFinalDaTarefa = statusNovoProposto; // O status efetivo após o update
-//     const tagsAtuaisDaTarefa = updates.tags || []; // Tags efetivas após o update
-//     const tagsAntigasDaTarefa = tarefaAtual.tags || [];
+    // --- Lógica de Atualização de Métricas ---
+    const criadorId = tarefaAtual.criador;
+    const statusFinalDaTarefa = statusNovoProposto; // O status efetivo após o update
+    const tagsAtuaisDaTarefa = updates.tags || []; // Tags efetivas após o update
+    const tagsAntigasDaTarefa = tarefaAtual.tags || [];
 
-//     // Usuários impactados: criador + todos os colaboradores (antigos e novos, se houver mudança)
-//     // Se a lista de colaboradores mudou, precisamos tratar adicionados e removidos.
-//     // Se apenas o status ou tags mudaram, precisamos atualizar para os colaboradores existentes.
+    // Usuários impactados: criador + todos os colaboradores (antigos e novos, se houver mudança)
+    // Se a lista de colaboradores mudou, precisamos tratar adicionados e removidos.
+    // Se apenas o status ou tags mudaram, precisamos atualizar para os colaboradores existentes.
 
-//     let todosColaboradoresImpactados = new Set(tarefaAtual.colaboradores || []);
-//     if (updates.hasOwnProperty('colaboradores')) {
-//         (updates.colaboradores || []).forEach(colab => todosColaboradoresImpactados.add(colab));
-//     }
-//     // Adiciona o criador para garantir que ele seja processado se também for colaborador,
-//     // mas a lógica principal para o criador é separada para clareza.
-//     // No entanto, para simplificar o loop, podemos incluí-lo e depois pular se for o criador.
-//     // Ou, manter a lógica separada para o criador e depois iterar nos colaboradores.
+    let todosColaboradoresImpactados = new Set(tarefaAtual.colaboradores || []);
+    if (updates.hasOwnProperty('colaboradores')) {
+        (updates.colaboradores || []).forEach(colab => todosColaboradoresImpactados.add(colab));
+    }
+    // Adiciona o criador para garantir que ele seja processado se também for colaborador,
+    // mas a lógica principal para o criador é separada para clareza.
+    // No entanto, para simplificar o loop, podemos incluí-lo e depois pular se for o criador.
+    // Ou, manter a lógica separada para o criador e depois iterar nos colaboradores.
 
-//     // 1. ATUALIZAR MÉTRICAS DO CRIADOR
-//     if (updates.status && updates.status !== statusAntigo) {
-//       console.log(`[CRIADOR: ${criadorId}] Status alterado: "${statusAntigo}" -> "${statusFinalDaTarefa}" (Tarefa: ${id})`);
-//       await atualizarContadorStatus(criadorId, statusFinalDaTarefa, 1, statusAntigo);
+    // 1. ATUALIZAR MÉTRICAS DO CRIADOR
+    if (updates.status && updates.status !== statusAntigo) {
+      console.log(`[CRIADOR: ${criadorId}] Status alterado: "${statusAntigo}" -> "${statusFinalDaTarefa}" (Tarefa: ${id})`);
+      await atualizarContadorStatus(criadorId, statusFinalDaTarefa, 1, statusAntigo);
 
-//       if (statusFinalDaTarefa === "concluida") {
-//         const ms = (dataConclusaoParaSetar || new Date()) - new Date(tarefaAtual.dataCriacao);
-//         await atualizarEstatisticasProdutividade(criadorId, ms, false, false, true);
-//         await registrarConclusaoPorData(criadorId, dataConclusaoParaSetar || new Date());
-//       } else if (statusAntigo === "concluida") {
-//         const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
-//         const ms =  dataConclusaoAnterior - new Date(tarefaAtual.dataCriacao);
-//         await atualizarEstatisticasProdutividade(criadorId, ms, true, false, false);
-//         await reverterConclusaoTarefa(colabId, dataConclusaoAnterior,-ms);
-//       }
-//     }
-//     if (updates.hasOwnProperty('tags')) {
-//       console.log(`[CRIADOR: ${criadorId}] Tags alteradas (Tarefa: ${id})`);
-//       await atualizarRankingTags(criadorId, tagsAtuaisDaTarefa, tagsAntigasDaTarefa);
-//     }
+      if (statusFinalDaTarefa === "concluida") {
+        const ms = (dataConclusaoParaSetar || new Date()) - new Date(tarefaAtual.dataCriacao);
+        await atualizarEstatisticasProdutividade(criadorId, ms, false, false, true);
+        await registrarConclusaoPorData(criadorId, dataConclusaoParaSetar || new Date());
+      } else if (statusAntigo === "concluida") {
+        const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
+        const ms =  dataConclusaoAnterior - new Date(tarefaAtual.dataCriacao);
+        await atualizarEstatisticasProdutividade(criadorId, ms, true, false, false);
+        await reverterConclusaoTarefa(colabId, dataConclusaoAnterior,-ms);
+      }
+    }
+    if (updates.hasOwnProperty('tags')) {
+      console.log(`[CRIADOR: ${criadorId}] Tags alteradas (Tarefa: ${id})`);
+      await atualizarRankingTags(criadorId, tagsAtuaisDaTarefa, tagsAntigasDaTarefa);
+    }
 
-//     // 2. ATUALIZAR MÉTRICAS DE COLABORADORES
-//     const colaboradoresAntigosSet = new Set(tarefaAtual.colaboradores || []);
-//     const colaboradoresNovosSet = new Set(updates.colaboradores || []); // Se 'colaboradores' não estiver em updates, este será vazio
+    // 2. ATUALIZAR MÉTRICAS DE COLABORADORES
+    const colaboradoresAntigosSet = new Set(tarefaAtual.colaboradores || []);
+    const colaboradoresNovosSet = new Set(updates.colaboradores || []); // Se 'colaboradores' não estiver em updates, este será vazio
 
-//     // Identificar quem são os colaboradores *após* esta atualização
-//     let colaboradoresEfetivosSet = new Set(colaboradoresAntigosSet);
-//     if (updates.hasOwnProperty('colaboradores')) {
-//         colaboradoresEfetivosSet = new Set(colaboradoresNovosSet);
-//     }
+    // Identificar quem são os colaboradores *após* esta atualização
+    let colaboradoresEfetivosSet = new Set(colaboradoresAntigosSet);
+    if (updates.hasOwnProperty('colaboradores')) {
+        colaboradoresEfetivosSet = new Set(colaboradoresNovosSet);
+    }
     
-//     // Processar colaboradores que foram ADICIONADOS
-//     if (updates.hasOwnProperty('colaboradores')) {
-//         for (const colabId of colaboradoresNovosSet) {
-//             if (!colaboradoresAntigosSet.has(colabId) && colabId !== criadorId) {
-//                 console.log(`[COLAB ADICIONADO: ${colabId}] Associado à tarefa ${id}. Status: ${statusFinalDaTarefa}`);
-//                 await atualizarRankingTags(colabId, tagsAtuaisDaTarefa, []); // Adiciona todas as tags atuais da tarefa
-//                 await atualizarContadorStatus(colabId, statusFinalDaTarefa, 1);
+    // Processar colaboradores que foram ADICIONADOS
+    if (updates.hasOwnProperty('colaboradores')) {
+        for (const colabId of colaboradoresNovosSet) {
+            if (!colaboradoresAntigosSet.has(colabId) && colabId !== criadorId) {
+                console.log(`[COLAB ADICIONADO: ${colabId}] Associado à tarefa ${id}. Status: ${statusFinalDaTarefa}`);
+                await atualizarRankingTags(colabId, tagsAtuaisDaTarefa, []); // Adiciona todas as tags atuais da tarefa
+                await atualizarContadorStatus(colabId, statusFinalDaTarefa, 1);
 
-//                 if (statusFinalDaTarefa === "concluida") {
-//                     const tempoConclusao = dataConclusaoParaSetar || new Date();
-//                     const ms = tempoConclusao - new Date(tarefaAtual.dataCriacao);
-//                     await atualizarEstatisticasProdutividade(colabId, ms, false, true, true);
-//                     await registrarConclusaoPorData(colabId, dataConclusaoParaSetar);
-//                 } else {
-//                     await atualizarEstatisticasProdutividade(colabId, null, false, true, false);
-//                 }
-//             }
-//         }
-//     }
+                if (statusFinalDaTarefa === "concluida") {
+                    const tempoConclusao = dataConclusaoParaSetar || new Date();
+                    const ms = tempoConclusao - new Date(tarefaAtual.dataCriacao);
+                    await atualizarEstatisticasProdutividade(colabId, ms, false, true, true);
+                    await registrarConclusaoPorData(colabId, dataConclusaoParaSetar);
+                } else {
+                    await atualizarEstatisticasProdutividade(colabId, null, false, true, false);
+                }
+            }
+        }
+    }
 
-//     // Processar colaboradores que foram REMOVIDOS
-//     if (updates.hasOwnProperty('colaboradores')) {
-//         for (const colabId of colaboradoresAntigosSet) {
-//             if (!colaboradoresNovosSet.has(colabId) && colabId !== criadorId) {
-//                 console.log(`[COLAB REMOVIDO: ${colabId}] Desassociado da tarefa ${id}. Status antigo: ${statusAntigo}`);
-//                 await atualizarRankingTags(colabId, [], tagsAntigasDaTarefa); // Remove todas as tags antigas da tarefa
-//                 await atualizarContadorStatus(colabId, statusAntigo, -1);
+    // Processar colaboradores que foram REMOVIDOS
+    if (updates.hasOwnProperty('colaboradores')) {
+        for (const colabId of colaboradoresAntigosSet) {
+            if (!colaboradoresNovosSet.has(colabId) && colabId !== criadorId) {
+                console.log(`[COLAB REMOVIDO: ${colabId}] Desassociado da tarefa ${id}. Status antigo: ${statusAntigo}`);
+                await atualizarRankingTags(colabId, [], tagsAntigasDaTarefa); // Remove todas as tags antigas da tarefa
+                await atualizarContadorStatus(colabId, statusAntigo, -1);
 
-//                 if (statusAntigo === "concluida") {
-//                     const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
-//                     const ms =  dataConclusaoAnterior - new Date(tarefaAtual.dataCriacao);
-//                     await atualizarEstatisticasProdutividade(colabId, ms, true, false, false);
-//                     await reverterConclusaoTarefa(colabId, dataConclusaoAnterior,-ms);
-//                 } else {
-//                     await atualizarEstatisticasProdutividade(colabId, null, true, false, false);
-//                 }
-//             }
-//         }
-//     }
+                if (statusAntigo === "concluida") {
+                    const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
+                    const ms =  dataConclusaoAnterior - new Date(tarefaAtual.dataCriacao);
+                    await atualizarEstatisticasProdutividade(colabId, ms, true, false, false);
+                    await reverterConclusaoTarefa(colabId, dataConclusaoAnterior,-ms);
+                } else {
+                    await atualizarEstatisticasProdutividade(colabId, null, true, false, false);
+                }
+            }
+        }
+    }
     
-//     // Processar colaboradores que PERMANECERAM na tarefa, mas o status ou tags da tarefa mudaram
-//     // (e não foram tratados como adicionados/removidos)
-//     for (const colabId of colaboradoresEfetivosSet) {
-//         if (colabId === criadorId) continue; // Criador já tratado
+    // Processar colaboradores que PERMANECERAM na tarefa, mas o status ou tags da tarefa mudaram
+    // (e não foram tratados como adicionados/removidos)
+    for (const colabId of colaboradoresEfetivosSet) {
+        if (colabId === criadorId) continue; // Criador já tratado
 
-//         // Se este colaborador não foi recém-adicionado (já estava na lista antiga)
-//         // E a lista de colaboradores não foi o único update (ou seja, status ou tags também podem ter mudado)
-//         let colaboradorJaExistente = true;
-//         if(updates.hasOwnProperty('colaboradores')){
-//             colaboradorJaExistente = colaboradoresAntigosSet.has(colabId);
-//         }
+        // Se este colaborador não foi recém-adicionado (já estava na lista antiga)
+        // E a lista de colaboradores não foi o único update (ou seja, status ou tags também podem ter mudado)
+        let colaboradorJaExistente = true;
+        if(updates.hasOwnProperty('colaboradores')){
+            colaboradorJaExistente = colaboradoresAntigosSet.has(colabId);
+        }
 
 
-//         if (colaboradorJaExistente) {
-//             // Mudança de status para colaborador existente
-//             if (updates.status && updates.status !== statusAntigo) {
-//                 console.log(`[COLAB EXISTENTE: ${colabId}] Status alterado: "${statusAntigo}" -> "${statusFinalDaTarefa}" (Tarefa: ${id})`);
-//                 await atualizarContadorStatus(colabId, statusFinalDaTarefa, 1, statusAntigo);
+        if (colaboradorJaExistente) {
+            // Mudança de status para colaborador existente
+            if (updates.status && updates.status !== statusAntigo) {
+                console.log(`[COLAB EXISTENTE: ${colabId}] Status alterado: "${statusAntigo}" -> "${statusFinalDaTarefa}" (Tarefa: ${id})`);
+                await atualizarContadorStatus(colabId, statusFinalDaTarefa, 1, statusAntigo);
 
-//                 if (statusFinalDaTarefa === "concluida" && statusAntigo !== "concluida") {
-//                     const ms = (dataConclusaoParaSetar || new Date()) - new Date(tarefaAtual.dataCriacao);
-//                     await atualizarEstatisticasProdutividade(colabId, ms, false, false, true);
-//                     await registrarConclusaoPorData(colabId, dataConclusaoParaSetar || new Date());
-//                 } else if (statusAntigo === "concluida" && statusFinalDaTarefa !== "concluida") {
-//                     const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
-//                     const ms = dataConclusaoAnterior -  new Date(tarefaAtual.dataCriacao);
-//                     await atualizarEstatisticasProdutividade(colabId, ms, true, false, false);
-//                     await reverterConclusaoTarefa(colabId, dataConclusaoAnterior,-ms);
-//                 }
-//             }
+                if (statusFinalDaTarefa === "concluida" && statusAntigo !== "concluida") {
+                    const ms = (dataConclusaoParaSetar || new Date()) - new Date(tarefaAtual.dataCriacao);
+                    await atualizarEstatisticasProdutividade(colabId, ms, false, false, true);
+                    await registrarConclusaoPorData(colabId, dataConclusaoParaSetar || new Date());
+                } else if (statusAntigo === "concluida" && statusFinalDaTarefa !== "concluida") {
+                    const dataConclusaoAnterior = tarefaAtual.dataConclusao ? new Date(tarefaAtual.dataConclusao) : new Date();
+                    const ms = dataConclusaoAnterior -  new Date(tarefaAtual.dataCriacao);
+                    await atualizarEstatisticasProdutividade(colabId, ms, true, false, false);
+                    await reverterConclusaoTarefa(colabId, dataConclusaoAnterior,-ms);
+                }
+            }
 
-//             // Mudança de tags para colaborador existente (que não seja o criador)
-//             // Apenas se a lista de colaboradores NÃO foi o que mudou, ou se ele é um colaborador que permaneceu.
-//             if (updates.hasOwnProperty('tags') && (!updates.hasOwnProperty('colaboradores') || colaboradoresNovosSet.has(colabId))) {
-//                  console.log(`[COLAB EXISTENTE: ${colabId}] Tags alteradas (Tarefa: ${id})`);
-//                 await atualizarRankingTags(colabId, tagsAtuaisDaTarefa, tagsAntigasDaTarefa);
-//             }
-//         }
-//     }
+            // Mudança de tags para colaborador existente (que não seja o criador)
+            // Apenas se a lista de colaboradores NÃO foi o que mudou, ou se ele é um colaborador que permaneceu.
+            if (updates.hasOwnProperty('tags') && (!updates.hasOwnProperty('colaboradores') || colaboradoresNovosSet.has(colabId))) {
+                 console.log(`[COLAB EXISTENTE: ${colabId}] Tags alteradas (Tarefa: ${id})`);
+                await atualizarRankingTags(colabId, tagsAtuaisDaTarefa, tagsAntigasDaTarefa);
+            }
+        }
+    }
 
-//     return result.modifiedCount > 0;
-//   } catch (err) {
-//     console.error(`Erro ao atualizar tarefa com ID ${id}:`, err);
-//     return false; 
-//   } finally {
-//     if (tarefasCollection) await closeMongoDBConnection();
-//   }
-// }
+    return result.modifiedCount > 0;
+  } catch (err) {
+    console.error(`Erro ao atualizar tarefa com ID ${id}:`, err);
+    return false; 
+  } finally {
+    if (tarefasCollection) await closeMongoDBConnection();
+  }
+}
 
 async function atualizarTarefaNoBanco(id, updates) {
-  const tarefasCollection = await connectToMongoDB(dbName, collectionName);
+  const tarefasCollection = await getMongoDBCollection("tarefas");
 
   const tarefaAtual = await tarefasCollection.findOne({ _id: id });
   if (!tarefaAtual) throw new Error("Tarefa não encontrada");
@@ -580,19 +580,6 @@ async function atualizarMetricasDaTarefa(tarefaAntiga, tarefaNova) {
     if (JSON.stringify(tagsNovas) !== JSON.stringify(tagsAntigas)) {
       await atualizarRankingTags(colabId, tagsNovas, tagsAntigas);
     }
-  }
-}
-
-export async function atualizarTarefa(id, updates) {
-  try {
-    const { atualizado, anterior, atualizadoDoc } = await atualizarTarefaNoBanco(id, updates);
-    if (!atualizado) return false;
-
-    await atualizarMetricasDaTarefa(anterior, atualizadoDoc);
-    return true;
-  } catch (err) {
-    console.error("Erro geral ao atualizar tarefa:", err);
-    return false;
   }
 }
 
